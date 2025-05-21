@@ -62,10 +62,10 @@ The application and database initialization script require database credentials 
 
 Once your `.env` file is configured, you can run the script to create the application database, user, ENUM types, and tables.
 
-Execute the script from the root directory of the project:
+Execute the script from the root directory of the project using `uv run`:
 
 ```bash
-python -m scripts.init_db.run_init_db
+uv run python -m scripts.init_db.run_init_db
 ```
 
 You should see output in your terminal indicating the progress of the script:
