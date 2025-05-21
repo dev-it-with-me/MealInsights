@@ -43,7 +43,7 @@ project/
 │   |  └── service.py
 ├── modules/
 │   ├── __init__.py
-│   ├── users/
+│   ├── diet_planning/
 │   │   ├── __init__.py
 │   │   ├── routes.py
 │   │   ├── services.py
@@ -54,7 +54,7 @@ project/
 │   │   ├── exceptions.py
 │   │   ├── utils.py
 │   │   └── constants.py
-│   ├── items/
+│   ├── ingredients_and_products/
 │   │   ├── __init__.py
 │   │   ├── routes.py
 │   │   ├── services.py
