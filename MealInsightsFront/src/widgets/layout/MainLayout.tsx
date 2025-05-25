@@ -73,32 +73,63 @@ const MainLayout = () => {
         </Group>
       </AppShell.Header>
 
-      <AppShell.Navbar p="md">
-        <Text size="xs" tt="uppercase" fw={700} c="dimmed" mb="sm">
+      <AppShell.Navbar p="sm">
+        <Text size="xs" tt="uppercase" fw={700} c="dimmed" mb="xs">
           Navigation
         </Text>
         
-        {navigationItems.map((item) => (
-          <NavLink
-            key={item.href}
-            component={Link}
-            to={item.href}
-            label={item.label}
-            leftSection={<item.icon size={rem(16)} stroke={1.5} />}
-            active={isActive(item.href)}
-            variant="filled"
-            onClick={() => {
-              // Close mobile menu when navigation item is clicked
-              if (window.innerWidth < 768) {
-                toggle();
-              }
-            }}
-            style={{
-              borderRadius: rem(8),
-              marginBottom: rem(4),
-            }}
-          />
-        ))}
+        {navigationItems.map((item) => {
+          const IconComponent = item.icon;
+          const active = isActive(item.href);
+          
+          return (
+            <Link
+              key={item.href}
+              to={item.href}
+              onClick={() => {
+                // Close mobile menu when navigation item is clicked
+                if (window.innerWidth < 768) {
+                  toggle();
+                }
+              }}
+              style={{
+                textDecoration: 'none',
+                color: 'inherit',
+                display: 'block',
+                marginBottom: rem(2),
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: rem(8),
+                  padding: `${rem(6)} ${rem(8)}`,
+                  borderRadius: rem(4),
+                  fontSize: rem(13),
+                  fontWeight: 500,
+                  backgroundColor: active ? 'var(--mantine-color-blue-light)' : 'transparent',
+                  color: active ? 'var(--mantine-color-blue-filled)' : 'var(--mantine-color-text)',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  if (!active) {
+                    e.currentTarget.style.backgroundColor = 'var(--mantine-color-gray-light)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!active) {
+                    e.currentTarget.style.backgroundColor = 'transparent';
+                  }
+                }}
+              >
+                <IconComponent size={14} stroke={1.5} />
+                <span>{item.label}</span>
+              </div>
+            </Link>
+          );
+        })}
       </AppShell.Navbar>
 
       <AppShell.Main>
