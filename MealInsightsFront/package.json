@@ -18,9 +18,14 @@
     "@mantine/hooks": "^8.0.1",
     "@mantine/modals": "^8.0.1",
     "@mantine/notifications": "^8.0.1",
+    "@tabler/icons-react": "^3.33.0",
+    "@types/node": "^22.15.21",
+    "@types/react-router-dom": "^5.3.3",
+    "clsx": "^2.1.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.56.4",
+    "react-router-dom": "^7.6.1",
     "zod": "^3.25.28"
   },
   "devDependencies": {

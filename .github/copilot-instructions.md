@@ -292,6 +292,46 @@ const Button = ({ variant, size, className, ...props }) => (
 );
 ```
 
+## React Router Integration
+
+### Route Configuration
+```typescript
+// app/providers/RouterProvider.tsx
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { routes } from '@/pages/routes';
+
+const router = createBrowserRouter(routes);
+
+export const AppRouterProvider = () => (
+  <RouterProvider router={router} />
+);
+```
+
+### Page Structure
+```typescript
+// pages/routes/index.ts
+import { RouteObject } from 'react-router-dom';
+import { HomePage } from '@/pages/HomePage';
+import { UserPage } from '@/pages/UserPage';
+
+export const routes: RouteObject[] = [
+  {
+    path: '/',
+    element: <HomePage />,
+  },
+  {
+    path: '/users/:id',
+    element: <UserPage />,
+  },
+];
+```
+
+### Navigation
+- Use `Link` and `NavLink` for navigation
+- Leverage `useNavigate` for programmatic routing
+- Use `useParams` and `useSearchParams` for URL data
+- Implement route guards with loaders or guards pattern
+
 ## Mantine UI Integration
 
 ### Component Usage
