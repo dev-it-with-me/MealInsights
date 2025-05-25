@@ -41,14 +41,12 @@ class Ingredient(BaseModel):
 
 class IngredientQuantity(BaseModel):
     """Represents a specific quantity of a given ingredient."""
+
     ingredient: Ingredient = Field(..., description="The ingredient itself")
     quantity: float = Field(..., ge=0, description="The amount of the ingredient")
     unit: UnitEnum = Field(..., description="The unit of measurement for the quantity")
 
-    model_config = {
-        "extra": "forbid",
-        "from_attributes": True
-    }
+    model_config = {"extra": "forbid", "from_attributes": True}
 
 
 class Product(BaseModel):

@@ -140,4 +140,252 @@ Each module cannot import from other modules - if something is shared between mo
 ## Database
 
 * Postgresql
-* Library to operate with db - sqlalchemy
+* Library to operate with db - sqlalchemy core
+* Never use ORM - always use core - the pure sql queries
+
+# Frontend Coding Guidelines
+
+## Architecture - Feature-Sliced Design
+
+### Folder Structure
+```
+src/
+├── app/                    # App-level configuration
+│   ├── providers/         # Global providers (theme, auth, etc.)
+│   ├── store/            # Global state
+│   └── styles/           # Global styles
+├── pages/                 # Page components and routing
+├── widgets/              # Large UI blocks (header, sidebar, etc.)
+├── features/             # Business logic features
+│   └── [feature-name]/
+│       ├── api/          # API calls
+│       ├── model/        # State, schemas, types
+│       ├── ui/           # Feature UI components
+│       └── lib/          # Feature utilities
+├── entities/             # Business entities
+│   └── [entity-name]/
+│       ├── api/
+│       ├── model/
+│       ├── ui/
+│       └── lib/
+└── shared/               # Reusable code
+    ├── ui/               # UI kit components
+    ├── lib/              # Utilities, helpers
+    ├── api/              # Base API configuration
+    └── config/           # App configuration
+```
+
+### Import Rules
+- Higher layers can import from lower layers only
+- No cross-imports within the same layer
+- Use absolute imports with path aliases
+
+## Code Organization
+
+### Component Structure
+```typescript
+// Component file organization
+export interface ComponentProps {
+  // Props definition
+}
+
+const Component = ({ prop1, prop2 }: ComponentProps) => {
+  // 1. Hooks (state, effects, etc.)
+  // 2. Computed values
+  // 3. Event handlers
+  // 4. Early returns/guards
+  // 5. JSX return
+};
+
+export default Component;
+```
+
+### File Naming
+- Components: `PascalCase.tsx`
+- Hooks: `use[Name].ts`
+- Types: `types.ts` or `[entity].types.ts`
+- Utils: `camelCase.ts`
+- Constants: `UPPER_SNAKE_CASE.ts`
+
+## React Best Practices
+
+### Component Guidelines
+- One component per file
+- Max 150 lines per component
+- Extract logic into custom hooks for reusability
+- Use compound components for complex UI patterns
+- Prefer composition over prop drilling
+
+### State Management
+- Use local state first (useState, useReducer)
+- Lift state up when needed by multiple components
+- Use context sparingly for truly global state
+- Consider custom hooks for shared stateful logic
+
+### Performance
+- Use React.memo for expensive renders
+- Implement proper dependency arrays in useEffect
+- Avoid creating objects/functions in render
+- Use useCallback/useMemo when beneficial
+
+## Zod Integration
+
+### Schema Organization
+```typescript
+// shared/lib/schemas/[entity].schema.ts
+import { z } from 'zod';
+
+export const userSchema = z.object({
+  id: z.string().uuid(),
+  email: z.string().email(),
+  name: z.string().min(1, 'Name is required'),
+});
+
+export type User = z.infer<typeof userSchema>;
+```
+
+### Form Validation
+- Use react-hook-form with Zod resolver
+- Create reusable validation schemas
+- Handle validation errors gracefully
+- Provide clear error messages
+
+### API Validation
+```typescript
+// Validate API responses
+const parseUser = (data: unknown): User => {
+  return userSchema.parse(data);
+};
+```
+
+## Styling with Tailwind
+
+### Class Organization
+- Use Tailwind's official class order
+- Group related classes together
+- Use custom CSS for complex animations only
+- Leverage Tailwind's design tokens consistently
+
+### Responsive Design
+- Mobile-first approach
+- Use Tailwind breakpoints consistently
+- Test across different screen sizes
+- Consider container queries for components
+
+### Component Styling
+```typescript
+// Use clsx for conditional classes
+import { clsx } from 'clsx';
+
+const Button = ({ variant, size, className, ...props }) => (
+  <button
+    className={clsx(
+      'base-classes',
+      {
+        'variant-classes': variant === 'primary',
+      },
+      className
+    )}
+    {...props}
+  />
+);
+```
+
+## Skeleton UI Integration
+
+### Loading States
+- Implement skeleton screens for all async content
+- Match skeleton structure to actual content
+- Use consistent skeleton styling across app
+- Provide meaningful loading indicators
+
+### Component Pattern
+```typescript
+const DataComponent = () => {
+  const { data, isLoading } = useQuery();
+
+  if (isLoading) return <ComponentSkeleton />;
+  
+  return <ActualComponent data={data} />;
+};
+```
+
+## Code Quality Standards
+
+### TypeScript
+- Strict mode enabled
+- No `any` types (use `unknown` if needed)
+- Proper typing for all props and functions
+- Use type guards for runtime validation
+- Prefer interfaces for object shapes
+
+### Error Handling
+- Use Error Boundaries for component errors
+- Implement proper try-catch for async operations
+- Provide fallback UI for error states
+- Log errors appropriately
+
+
+
+## Code Readability
+
+### Naming Conventions
+- Use descriptive variable names
+- Boolean variables: `is*`, `has*`, `can*`, `should*`
+- Event handlers: `handle*` or `on*`
+- Constants: Descriptive names over abbreviations
+
+### Comments
+- Explain why, not what
+- Document complex business logic
+- Use JSDoc for public APIs
+- Remove dead code instead of commenting out
+
+### Function Guidelines
+- Single responsibility principle
+- Max 20-30 lines per function
+- Pure functions when possible
+- Clear input/output types
+
+## Import Organization
+```typescript
+// 1. React and external libraries
+import React from 'react';
+import { z } from 'zod';
+
+// 2. Internal imports (absolute paths)
+import { Button } from '@/shared/ui';
+import { useAuth } from '@/features/auth';
+
+// 3. Relative imports
+import './Component.styles.css';
+```
+
+## Performance Guidelines
+
+### Bundle Optimization
+- Use dynamic imports for route-based code splitting
+- Lazy load heavy components
+- Optimize images and assets
+- Monitor bundle size regularly
+
+### Runtime Performance
+- Avoid unnecessary re-renders
+- Use proper key props in lists
+- Implement virtualization for large lists
+- Profile performance bottlenecks
+
+## Accessibility
+
+### Standards
+- Semantic HTML elements
+- Proper ARIA labels and roles
+- Keyboard navigation support
+- Color contrast compliance
+- Screen reader testing
+
+### Implementation
+- Use Tailwind's accessibility utilities
+- Test with keyboard-only navigation
+- Provide focus indicators
+- Include alternative text for images
