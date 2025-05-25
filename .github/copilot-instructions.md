@@ -292,20 +292,36 @@ const Button = ({ variant, size, className, ...props }) => (
 );
 ```
 
-## Skeleton UI Integration
+## Mantine UI Integration
+
+### Component Usage
+- Use Mantine components as building blocks
+- Customize through theme configuration
+- Leverage Mantine hooks for common patterns
+- Use built-in loading states and skeletons
+
+### Theme Configuration
+```typescript
+// app/providers/MantineProvider.tsx
+import { MantineProvider, createTheme } from '@mantine/core';
+
+const theme = createTheme({
+  // Custom theme configuration
+  primaryColor: 'blue',
+  fontFamily: 'Inter, sans-serif',
+});
+
+export const AppMantineProvider = ({ children }) => (
+  <MantineProvider theme={theme}>{children}</MantineProvider>
+);
+```
 
 ### Loading States
-- Implement skeleton screens for all async content
-- Match skeleton structure to actual content
-- Use consistent skeleton styling across app
-- Provide meaningful loading indicators
-
-### Component Pattern
 ```typescript
 const DataComponent = () => {
   const { data, isLoading } = useQuery();
 
-  if (isLoading) return <ComponentSkeleton />;
+  if (isLoading) return <Skeleton height={200} />;
   
   return <ActualComponent data={data} />;
 };
