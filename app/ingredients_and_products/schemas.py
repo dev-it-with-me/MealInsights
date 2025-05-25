@@ -4,7 +4,6 @@ These schemas are used for API validation and documentation.
 """
 
 import uuid
-from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -20,10 +19,10 @@ class IngredientCreateSchema(BaseModel):
     name: str = Field(
         ..., min_length=1, max_length=100, description="Name of the ingredient"
     )
-    photo_data: Optional[bytes] = Field(
+    photo_data: None | bytes = Field(
         default=None, description="Binary data of the ingredient's photo"
     )
-    shop: Optional[str] = Field(
+    shop: None | str = Field(
         default=None,
         max_length=100,
         description="Shop where the ingredient can be bought",
@@ -34,7 +33,7 @@ class IngredientCreateSchema(BaseModel):
     macros_per_100g_or_ml: Macros = Field(
         ..., description="Macronutrients per 100g or 100ml of the ingredient"
     )
-    tags: List[DietTagEnum] = Field(
+    tags: list[DietTagEnum] = Field(
         default_factory=list,
         description="Tags associated with the ingredient",
     )
@@ -45,24 +44,24 @@ class IngredientCreateSchema(BaseModel):
 class IngredientUpdateSchema(BaseModel):
     """Schema for updating an existing ingredient."""
 
-    name: Optional[str] = Field(
+    name: None | str = Field(
         default=None, min_length=1, max_length=100, description="Name of the ingredient"
     )
-    photo_data: Optional[bytes] = Field(
+    photo_data: None | bytes = Field(
         default=None, description="Binary data of the ingredient's photo"
     )
-    shop: Optional[str] = Field(
+    shop: None | str = Field(
         default=None,
         max_length=100,
         description="Shop where the ingredient can be bought",
     )
-    calories_per_100g_or_ml: Optional[float] = Field(
+    calories_per_100g_or_ml: None | float = Field(
         default=None, ge=0, description="Calories per 100g or 100ml of the ingredient"
     )
-    macros_per_100g_or_ml: Optional[Macros] = Field(
+    macros_per_100g_or_ml: None | Macros = Field(
         default=None, description="Macronutrients per 100g or 100ml of the ingredient"
     )
-    tags: Optional[List[DietTagEnum]] = Field(
+    tags: None | list[DietTagEnum] = Field(
         default=None,
         description="Tags associated with the ingredient",
     )
@@ -75,10 +74,10 @@ class IngredientResponseSchema(BaseModel):
 
     id: uuid.UUID = Field(..., description="Unique identifier for the ingredient")
     name: str = Field(..., description="Name of the ingredient")
-    photo_data: Optional[bytes] = Field(
+    photo_data: None | bytes = Field(
         default=None, description="Binary data of the ingredient's photo"
     )
-    shop: Optional[str] = Field(
+    shop: None | str = Field(
         default=None, description="Shop where the ingredient can be bought"
     )
     calories_per_100g_or_ml: float = Field(
@@ -87,7 +86,7 @@ class IngredientResponseSchema(BaseModel):
     macros_per_100g_or_ml: Macros = Field(
         ..., description="Macronutrients per 100g or 100ml of the ingredient"
     )
-    tags: List[DietTagEnum] = Field(
+    tags: list[DietTagEnum] = Field(
         ..., description="Tags associated with the ingredient"
     )
 
@@ -97,8 +96,8 @@ class IngredientResponseSchema(BaseModel):
 class IngredientsListSchema(BaseModel):
     """Schema for ingredient list responses."""
 
-    ingredients: List[IngredientResponseSchema] = Field(
-        ..., description="List of ingredients"
+    ingredients: list[IngredientResponseSchema] = Field(
+        ..., description="list of ingredients"
     )
     total: int = Field(..., description="Total number of ingredients")
     skip: int = Field(..., description="Number of ingredients skipped")
@@ -137,36 +136,36 @@ class ProductCreateSchema(BaseModel):
     name: str = Field(
         ..., min_length=1, max_length=150, description="Name of the product"
     )
-    brand: Optional[str] = Field(
+    brand: None | str = Field(
         default=None, max_length=100, description="Brand name of the product"
     )
-    photo_data: Optional[bytes] = Field(
+    photo_data: None | bytes = Field(
         default=None, description="Binary data of the product's photo"
     )
-    shop: Optional[str] = Field(
+    shop: None | str = Field(
         default=None, max_length=100, description="Shop where the product was bought"
     )
-    barcode: Optional[str] = Field(
+    barcode: None | str = Field(
         default=None,
         max_length=50,
         description="Barcode of the product (e.g., EAN, UPC)",
     )
-    calories_per_100g_or_ml: Optional[float] = Field(
+    calories_per_100g_or_ml: None | float = Field(
         default=None, ge=0, description="Calories per 100g or 100ml"
     )
-    macros_per_100g_or_ml: Optional[Macros] = Field(
+    macros_per_100g_or_ml: None | Macros = Field(
         default=None, description="Macronutrients per 100g or 100ml"
     )
-    package_size_g_or_ml: Optional[float] = Field(
+    package_size_g_or_ml: None | float = Field(
         default=None,
         ge=0,
         description="Total size of the package in grams or milliliters",
     )
-    ingredients: Optional[List[IngredientQuantityCreateSchema]] = Field(
+    ingredients: None | list[IngredientQuantityCreateSchema] = Field(
         default=None,
-        description="List of ingredients and their quantities in this product",
+        description="list of ingredients and their quantities in this product",
     )
-    tags: List[DietTagEnum] = Field(
+    tags: list[DietTagEnum] = Field(
         default_factory=list,
         description="Tags associated with the product",
     )
@@ -177,39 +176,39 @@ class ProductCreateSchema(BaseModel):
 class ProductUpdateSchema(BaseModel):
     """Schema for updating an existing product."""
 
-    name: Optional[str] = Field(
+    name: None | str = Field(
         default=None, min_length=1, max_length=150, description="Name of the product"
     )
-    brand: Optional[str] = Field(
+    brand: None | str = Field(
         default=None, max_length=100, description="Brand name of the product"
     )
-    photo_data: Optional[bytes] = Field(
+    photo_data: None | bytes = Field(
         default=None, description="Binary data of the product's photo"
     )
-    shop: Optional[str] = Field(
+    shop: None | str = Field(
         default=None, max_length=100, description="Shop where the product was bought"
     )
-    barcode: Optional[str] = Field(
+    barcode: None | str = Field(
         default=None,
         max_length=50,
         description="Barcode of the product (e.g., EAN, UPC)",
     )
-    calories_per_100g_or_ml: Optional[float] = Field(
+    calories_per_100g_or_ml: None | float = Field(
         default=None, ge=0, description="Calories per 100g or 100ml"
     )
-    macros_per_100g_or_ml: Optional[Macros] = Field(
+    macros_per_100g_or_ml: None | Macros = Field(
         default=None, description="Macronutrients per 100g or 100ml"
     )
-    package_size_g_or_ml: Optional[float] = Field(
+    package_size_g_or_ml: None | float = Field(
         default=None,
         ge=0,
         description="Total size of the package in grams or milliliters",
     )
-    ingredients: Optional[List[IngredientQuantityCreateSchema]] = Field(
+    ingredients: None | list[IngredientQuantityCreateSchema] = Field(
         default=None,
-        description="List of ingredients and their quantities in this product",
+        description="list of ingredients and their quantities in this product",
     )
-    tags: Optional[List[DietTagEnum]] = Field(
+    tags: None | list[DietTagEnum] = Field(
         default=None,
         description="Tags associated with the product",
     )
@@ -222,28 +221,28 @@ class ProductResponseSchema(BaseModel):
 
     id: uuid.UUID = Field(..., description="Unique identifier for the product")
     name: str = Field(..., description="Name of the product")
-    brand: Optional[str] = Field(default=None, description="Brand name of the product")
-    photo_data: Optional[bytes] = Field(
+    brand: None | str = Field(default=None, description="Brand name of the product")
+    photo_data: None | bytes = Field(
         default=None, description="Binary data of the product's photo"
     )
-    shop: Optional[str] = Field(
+    shop: None | str = Field(
         default=None, description="Shop where the product was bought"
     )
-    barcode: Optional[str] = Field(default=None, description="Barcode of the product")
-    calories_per_100g_or_ml: Optional[float] = Field(
+    barcode: None | str = Field(default=None, description="Barcode of the product")
+    calories_per_100g_or_ml: None | float = Field(
         default=None, description="Calories per 100g or 100ml"
     )
-    macros_per_100g_or_ml: Optional[Macros] = Field(
+    macros_per_100g_or_ml: None | Macros = Field(
         default=None, description="Macronutrients per 100g or 100ml"
     )
-    package_size_g_or_ml: Optional[float] = Field(
+    package_size_g_or_ml: None | float = Field(
         default=None, description="Total size of the package in grams or milliliters"
     )
-    ingredients: Optional[List[IngredientQuantityResponseSchema]] = Field(
+    ingredients: None | list[IngredientQuantityResponseSchema] = Field(
         default=None,
-        description="List of ingredients and their quantities in this product",
+        description="list of ingredients and their quantities in this product",
     )
-    tags: List[DietTagEnum] = Field(..., description="Tags associated with the product")
+    tags: list[DietTagEnum] = Field(..., description="Tags associated with the product")
 
     model_config = {"extra": "forbid", "from_attributes": True}
 
@@ -251,7 +250,7 @@ class ProductResponseSchema(BaseModel):
 class ProductsListSchema(BaseModel):
     """Schema for product list responses."""
 
-    products: List[ProductResponseSchema] = Field(..., description="List of products")
+    products: list[ProductResponseSchema] = Field(..., description="list of products")
     total: int = Field(..., description="Total number of products")
     skip: int = Field(..., description="Number of products skipped")
     limit: int = Field(..., description="Maximum number of products returned")
@@ -263,13 +262,13 @@ class ProductsListSchema(BaseModel):
 class IngredientSearchSchema(BaseModel):
     """Schema for ingredient search parameters."""
 
-    name_filter: Optional[str] = Field(
+    name_filter: None | str = Field(
         default=None, description="Filter ingredients by name"
     )
-    shop_filter: Optional[str] = Field(
+    shop_filter: None | str = Field(
         default=None, description="Filter ingredients by shop"
     )
-    tag_filter: Optional[List[DietTagEnum]] = Field(
+    tag_filter: None | list[DietTagEnum] = Field(
         default=None, description="Filter ingredients by tags"
     )
     skip: int = Field(default=0, ge=0, description="Number of ingredients to skip")
@@ -286,16 +285,12 @@ class IngredientSearchSchema(BaseModel):
 class ProductSearchSchema(BaseModel):
     """Schema for product search parameters."""
 
-    name_filter: Optional[str] = Field(
-        default=None, description="Filter products by name"
-    )
-    brand_filter: Optional[str] = Field(
+    name_filter: None | str = Field(default=None, description="Filter products by name")
+    brand_filter: None | str = Field(
         default=None, description="Filter products by brand"
     )
-    shop_filter: Optional[str] = Field(
-        default=None, description="Filter products by shop"
-    )
-    tag_filter: Optional[List[DietTagEnum]] = Field(
+    shop_filter: None | str = Field(default=None, description="Filter products by shop")
+    tag_filter: None | list[DietTagEnum] = Field(
         default=None, description="Filter products by tags"
     )
     skip: int = Field(default=0, ge=0, description="Number of products to skip")
@@ -319,6 +314,6 @@ class ErrorResponseSchema(BaseModel):
 class ValidationErrorResponseSchema(BaseModel):
     """Schema for validation error responses."""
 
-    detail: List[dict] = Field(..., description="List of validation errors")
+    detail: list[dict] = Field(..., description="list of validation errors")
 
     model_config = {"extra": "forbid"}

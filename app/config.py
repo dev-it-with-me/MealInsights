@@ -47,7 +47,7 @@ class Settings(BaseSettings):
 
     # Application settings
     app_name: str = Field(default="MealInsights")
-    debug: bool = Field(default=False)
+    debug: bool = Field(default=True)
     log_level: str = Field(default="INFO")
 
     @property
