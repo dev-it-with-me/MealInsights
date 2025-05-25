@@ -5,7 +5,6 @@ Orchestrates operations and handles business rules.
 
 import logging
 import uuid
-from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from app.models import Macros
@@ -37,9 +36,9 @@ class IngredientService:
         name: str,
         calories_per_100g_or_ml: float,
         macros_per_100g_or_ml: Macros,
-        photo_data: Optional[bytes] = None,
-        shop: Optional[str] = None,
-        tags: Optional[List[DietTagEnum]] = None,
+        photo_data: None | bytes = None,
+        shop: None | str = None,
+        tags: None | list[DietTagEnum] = None,
     ) -> Ingredient:
         """
         Create a new ingredient with validation.
@@ -48,9 +47,9 @@ class IngredientService:
             name: Ingredient name
             calories_per_100g_or_ml: Calories per 100g or 100ml
             macros_per_100g_or_ml: Macronutrients per 100g or 100ml
-            photo_data: Optional photo data
-            shop: Optional shop where ingredient can be bought
-            tags: Optional list of diet tags
+            photo_data: None |  photo data
+            shop: None |  shop where ingredient can be bought
+            tags: None |  list of diet tags
 
         Returns:
             Ingredient: The created ingredient
@@ -65,20 +64,19 @@ class IngredientService:
             name, calories_per_100g_or_ml, macros_per_100g_or_ml
         )
 
-        # Prepare data
-        ingredient_data = {
-            "name": name.strip(),
-            "calories_per_100g_or_ml": calories_per_100g_or_ml,
-            "macros_per_100g_or_ml": macros_per_100g_or_ml,
-            "photo_data": photo_data,
-            "shop": shop.strip() if shop else None,
-            "tags": tags or [],
-        }
-
+        # Instantiate Ingredient model instead of raw dict
+        ingredient = Ingredient(
+            name=name.strip(),
+            calories_per_100g_or_ml=calories_per_100g_or_ml,
+            macros_per_100g_or_ml=macros_per_100g_or_ml,
+            photo_data=photo_data,
+            shop=shop.strip() if shop else None,
+            tags=tags or [],
+        )
         logger.info(f"Creating ingredient: {name}")
-        return self.repository.create(ingredient_data)
+        return self.repository.create(ingredient)
 
-    def get_ingredient_by_id(self, ingredient_id: uuid.UUID) -> Ingredient:
+    def get_ingredient_by_id(self, ingredient_id: uuid.UUID) -> Ingredient | None:
         """
         Get an ingredient by its ID.
 
@@ -97,10 +95,10 @@ class IngredientService:
         self,
         skip: int = 0,
         limit: int = 100,
-        name_filter: Optional[str] = None,
-        shop_filter: Optional[str] = None,
-        tag_filter: Optional[List[DietTagEnum]] = None,
-    ) -> List[Ingredient]:
+        name_filter: None | str = None,
+        shop_filter: None | str = None,
+        tag_filter: None | list[DietTagEnum] = None,
+    ) -> list[Ingredient]:
         """
         Get all ingredients with optional filtering.
 
@@ -112,7 +110,7 @@ class IngredientService:
             tag_filter: Filter by tags (ingredient must have all specified tags)
 
         Returns:
-            List[Ingredient]: List of ingredients
+            list[Ingredient]: list of ingredients
         """
         # Validate pagination parameters
         if skip < 0:
@@ -131,24 +129,24 @@ class IngredientService:
     def update_ingredient(
         self,
         ingredient_id: uuid.UUID,
-        name: Optional[str] = None,
-        calories_per_100g_or_ml: Optional[float] = None,
-        macros_per_100g_or_ml: Optional[Macros] = None,
-        photo_data: Optional[bytes] = None,
-        shop: Optional[str] = None,
-        tags: Optional[List[DietTagEnum]] = None,
-    ) -> Ingredient:
+        name: None | str = None,
+        calories_per_100g_or_ml: None | float = None,
+        macros_per_100g_or_ml: None | Macros = None,
+        photo_data: None | bytes = None,
+        shop: None | str = None,
+        tags: None | list[DietTagEnum] = None,
+    ) -> Ingredient | None:
         """
         Update an existing ingredient.
 
         Args:
             ingredient_id: The ingredient ID
-            name: Optional new name
-            calories_per_100g_or_ml: Optional new calories
-            macros_per_100g_or_ml: Optional new macros
-            photo_data: Optional new photo data
-            shop: Optional new shop
-            tags: Optional new tags list
+            name: None |  new name
+            calories_per_100g_or_ml: None |  new calories
+            macros_per_100g_or_ml: None |  new macros
+            photo_data: None |  new photo data
+            shop: None |  new shop
+            tags: None |  new tags list
 
         Returns:
             Ingredient: The updated ingredient
@@ -175,27 +173,31 @@ class IngredientService:
             ):
                 raise ValueError("Macronutrient values must be non-negative")
 
-        # Prepare update data
-        update_data = {}
-        if name is not None:
-            update_data["name"] = name.strip()
-        if calories_per_100g_or_ml is not None:
-            update_data["calories_per_100g_or_ml"] = calories_per_100g_or_ml
-        if macros_per_100g_or_ml is not None:
-            update_data["macros_per_100g_or_ml"] = macros_per_100g_or_ml
-        if photo_data is not None:
-            update_data["photo_data"] = photo_data
-        if shop is not None:
-            update_data["shop"] = shop.strip() if shop else None
-        if tags is not None:
-            update_data["tags"] = tags
+        # Fetch existing ingredient
+        existing = self.repository.get_by_id(ingredient_id)
+        if not existing:
+            raise IngredientNotFoundError(str(ingredient_id))
 
-        if not update_data:
-            # No changes to make, return current ingredient
-            return self.repository.get_by_id(ingredient_id)
-
+        # Build updated Ingredient model
+        updated = Ingredient(
+            id=ingredient_id,
+            name=name.strip() if name is not None else existing.name,
+            calories_per_100g_or_ml=(
+                calories_per_100g_or_ml
+                if calories_per_100g_or_ml is not None
+                else existing.calories_per_100g_or_ml
+            ),
+            macros_per_100g_or_ml=(
+                macros_per_100g_or_ml
+                if macros_per_100g_or_ml is not None
+                else existing.macros_per_100g_or_ml
+            ),
+            photo_data=photo_data if photo_data is not None else existing.photo_data,
+            shop=shop.strip() if shop is not None else existing.shop,
+            tags=tags if tags is not None else existing.tags,
+        )
         logger.info(f"Updating ingredient: {ingredient_id}")
-        return self.repository.update(ingredient_id, update_data)
+        return self.repository.update(updated)
 
     def delete_ingredient(self, ingredient_id: uuid.UUID) -> bool:
         """
@@ -216,7 +218,7 @@ class IngredientService:
 
     def search_ingredients(
         self, name_pattern: str, limit: int = 10
-    ) -> List[Ingredient]:
+    ) -> list[Ingredient]:
         """
         Search ingredients by name pattern.
 
@@ -225,7 +227,7 @@ class IngredientService:
             limit: Maximum number of results
 
         Returns:
-            List[Ingredient]: List of matching ingredients
+            list[Ingredient]: list of matching ingredients
         """
         if not name_pattern.strip():
             raise ValueError("Search pattern cannot be empty")
@@ -235,15 +237,15 @@ class IngredientService:
 
         return self.repository.search_by_name(name_pattern.strip(), limit)
 
-    def get_ingredients_by_tags(self, tags: List[DietTagEnum]) -> List[Ingredient]:
+    def get_ingredients_by_tags(self, tags: list[DietTagEnum]) -> list[Ingredient]:
         """
         Get ingredients that have all specified tags.
 
         Args:
-            tags: List of required tags
+            tags: list of required tags
 
         Returns:
-            List[Ingredient]: List of ingredients with all specified tags
+            list[Ingredient]: list of ingredients with all specified tags
         """
         if not tags:
             raise ValueError("At least one tag must be specified")
@@ -342,30 +344,30 @@ class ProductService:
     def create_product(
         self,
         name: str,
-        brand: Optional[str] = None,
-        photo_data: Optional[bytes] = None,
-        shop: Optional[str] = None,
-        barcode: Optional[str] = None,
-        calories_per_100g_or_ml: Optional[float] = None,
-        macros_per_100g_or_ml: Optional[Macros] = None,
-        package_size_g_or_ml: Optional[float] = None,
-        ingredients: Optional[List[IngredientQuantity]] = None,
-        tags: Optional[List[DietTagEnum]] = None,
+        brand: None | str = None,
+        photo_data: None | bytes = None,
+        shop: None | str = None,
+        barcode: None | str = None,
+        calories_per_100g_or_ml: None | float = None,
+        macros_per_100g_or_ml: None | Macros = None,
+        package_size_g_or_ml: None | float = None,
+        ingredients: None | list[IngredientQuantity] = None,
+        tags: None | list[DietTagEnum] = None,
     ) -> Product:
         """
         Create a new product with validation.
 
         Args:
             name: Product name
-            brand: Optional brand name
-            photo_data: Optional photo data
-            shop: Optional shop where product was bought
-            barcode: Optional product barcode
-            calories_per_100g_or_ml: Optional calories per 100g or 100ml
-            macros_per_100g_or_ml: Optional macronutrients per 100g or 100ml
-            package_size_g_or_ml: Optional total package size
-            ingredients: Optional list of ingredients with quantities
-            tags: Optional list of diet tags
+            brand: None |  brand name
+            photo_data: None |  photo data
+            shop: None |  shop where product was bought
+            barcode: None |  product barcode
+            calories_per_100g_or_ml: None |  calories per 100g or 100ml
+            macros_per_100g_or_ml: None |  macronutrients per 100g or 100ml
+            package_size_g_or_ml: None |  total package size
+            ingredients: None |  list of ingredients with quantities
+            tags: None |  list of diet tags
 
         Returns:
             Product: The created product
@@ -396,24 +398,23 @@ class ProductService:
                         f"Ingredient with ID {ingredient_quantity.ingredient.id} not found"
                     )
 
-        # Prepare data
-        product_data = {
-            "name": name.strip(),
-            "brand": brand.strip() if brand else None,
-            "photo_data": photo_data,
-            "shop": shop.strip() if shop else None,
-            "barcode": barcode.strip() if barcode else None,
-            "calories_per_100g_or_ml": calories_per_100g_or_ml,
-            "macros_per_100g_or_ml": macros_per_100g_or_ml,
-            "package_size_g_or_ml": package_size_g_or_ml,
-            "ingredients": ingredients or [],
-            "tags": tags or [],
-        }
-
+        # Instantiate Product model instead of raw dict
+        product = Product(
+            name=name.strip(),
+            brand=brand.strip() if brand else None,
+            photo_data=photo_data,
+            shop=shop.strip() if shop else None,
+            barcode=barcode.strip() if barcode else None,
+            calories_per_100g_or_ml=calories_per_100g_or_ml,
+            macros_per_100g_or_ml=macros_per_100g_or_ml,
+            package_size_g_or_ml=package_size_g_or_ml,
+            ingredients=ingredients or [],
+            tags=tags or [],
+        )
         logger.info(f"Creating product: {name}")
-        return self.repository.create(product_data)
+        return self.repository.create(product)
 
-    def get_product_by_id(self, product_id: uuid.UUID) -> Product:
+    def get_product_by_id(self, product_id: uuid.UUID) -> Product | None:
         """
         Get a product by its ID.
 
@@ -428,7 +429,7 @@ class ProductService:
         """
         return self.repository.get_by_id(product_id)
 
-    def get_product_by_barcode(self, barcode: str) -> Optional[Product]:
+    def get_product_by_barcode(self, barcode: str) -> None | Product:
         """
         Get a product by its barcode.
 
@@ -447,11 +448,11 @@ class ProductService:
         self,
         skip: int = 0,
         limit: int = 100,
-        name_filter: Optional[str] = None,
-        brand_filter: Optional[str] = None,
-        shop_filter: Optional[str] = None,
-        tag_filter: Optional[List[DietTagEnum]] = None,
-    ) -> List[Product]:
+        name_filter: None | str = None,
+        brand_filter: None | str = None,
+        shop_filter: None | str = None,
+        tag_filter: None | list[DietTagEnum] = None,
+    ) -> list[Product]:
         """
         Get all products with optional filtering.
 
@@ -464,7 +465,7 @@ class ProductService:
             tag_filter: Filter by tags (product must have all specified tags)
 
         Returns:
-            List[Product]: List of products
+            listProduct: list of products
         """
         # Validate pagination parameters
         if skip < 0:
@@ -484,32 +485,32 @@ class ProductService:
     def update_product(
         self,
         product_id: uuid.UUID,
-        name: Optional[str] = None,
-        brand: Optional[str] = None,
-        photo_data: Optional[bytes] = None,
-        shop: Optional[str] = None,
-        barcode: Optional[str] = None,
-        calories_per_100g_or_ml: Optional[float] = None,
-        macros_per_100g_or_ml: Optional[Macros] = None,
-        package_size_g_or_ml: Optional[float] = None,
-        ingredients: Optional[List[IngredientQuantity]] = None,
-        tags: Optional[List[DietTagEnum]] = None,
-    ) -> Product:
+        name: None | str = None,
+        brand: None | str = None,
+        photo_data: None | bytes = None,
+        shop: None | str = None,
+        barcode: None | str = None,
+        calories_per_100g_or_ml: None | float = None,
+        macros_per_100g_or_ml: None | Macros = None,
+        package_size_g_or_ml: None | float = None,
+        ingredients: None | list[IngredientQuantity] = None,
+        tags: None | list[DietTagEnum] = None,
+    ) -> Product | None:
         """
         Update an existing product.
 
         Args:
             product_id: The product ID
-            name: Optional new name
-            brand: Optional new brand
-            photo_data: Optional new photo data
-            shop: Optional new shop
-            barcode: Optional new barcode
-            calories_per_100g_or_ml: Optional new calories
-            macros_per_100g_or_ml: Optional new macros
-            package_size_g_or_ml: Optional new package size
-            ingredients: Optional new ingredients list
-            tags: Optional new tags list
+            name: None |  new name
+            brand: None |  new brand
+            photo_data: None |  new photo data
+            shop: None |  new shop
+            barcode: None |  new barcode
+            calories_per_100g_or_ml: None |  new calories
+            macros_per_100g_or_ml: None |  new macros
+            package_size_g_or_ml: None |  new package size
+            ingredients: None |  new ingredients list
+            tags: None |  new tags list
 
         Returns:
             Product: The updated product
@@ -551,35 +552,41 @@ class ProductService:
                         f"Ingredient with ID {ingredient_quantity.ingredient.id} not found"
                     )
 
-        # Prepare update data
-        update_data = {}
-        if name is not None:
-            update_data["name"] = name.strip()
-        if brand is not None:
-            update_data["brand"] = brand.strip() if brand else None
-        if photo_data is not None:
-            update_data["photo_data"] = photo_data
-        if shop is not None:
-            update_data["shop"] = shop.strip() if shop else None
-        if barcode is not None:
-            update_data["barcode"] = barcode.strip() if barcode else None
-        if calories_per_100g_or_ml is not None:
-            update_data["calories_per_100g_or_ml"] = calories_per_100g_or_ml
-        if macros_per_100g_or_ml is not None:
-            update_data["macros_per_100g_or_ml"] = macros_per_100g_or_ml
-        if package_size_g_or_ml is not None:
-            update_data["package_size_g_or_ml"] = package_size_g_or_ml
-        if ingredients is not None:
-            update_data["ingredients"] = ingredients
-        if tags is not None:
-            update_data["tags"] = tags
+        # Fetch existing product
+        existing = self.repository.get_by_id(product_id)
+        if not existing:
+            raise ProductNotFoundError(str(product_id))
 
-        if not update_data:
-            # No changes to make, return current product
-            return self.repository.get_by_id(product_id)
-
+        # Build updated Product model
+        updated = Product(
+            id=product_id,
+            name=name.strip() if name is not None else existing.name,
+            brand=brand.strip() if brand is not None else existing.brand,
+            photo_data=photo_data if photo_data is not None else existing.photo_data,
+            shop=shop.strip() if shop is not None else existing.shop,
+            barcode=barcode.strip() if barcode is not None else existing.barcode,
+            calories_per_100g_or_ml=(
+                calories_per_100g_or_ml
+                if calories_per_100g_or_ml is not None
+                else existing.calories_per_100g_or_ml
+            ),
+            macros_per_100g_or_ml=(
+                macros_per_100g_or_ml
+                if macros_per_100g_or_ml is not None
+                else existing.macros_per_100g_or_ml
+            ),
+            package_size_g_or_ml=(
+                package_size_g_or_ml
+                if package_size_g_or_ml is not None
+                else existing.package_size_g_or_ml
+            ),
+            ingredients=ingredients
+            if ingredients is not None
+            else existing.ingredients,
+            tags=tags if tags is not None else existing.tags,
+        )
         logger.info(f"Updating product: {product_id}")
-        return self.repository.update(product_id, update_data)
+        return self.repository.update(updated)
 
     def delete_product(self, product_id: uuid.UUID) -> bool:
         """
@@ -598,7 +605,7 @@ class ProductService:
         logger.info(f"Deleting product: {product_id}")
         return self.repository.delete(product_id)
 
-    def search_products(self, name_pattern: str, limit: int = 10) -> List[Product]:
+    def search_products(self, name_pattern: str, limit: int = 10) -> list[Product]:
         """
         Search products by name pattern.
 
@@ -607,7 +614,7 @@ class ProductService:
             limit: Maximum number of results
 
         Returns:
-            List[Product]: List of matching products
+            list[Product]: list of matching products
         """
         if not name_pattern.strip():
             raise ValueError("Search pattern cannot be empty")
@@ -617,22 +624,22 @@ class ProductService:
 
         return self.repository.search_by_name(name_pattern.strip(), limit)
 
-    def get_products_by_tags(self, tags: List[DietTagEnum]) -> List[Product]:
+    def get_products_by_tags(self, tags: list[DietTagEnum]) -> list[Product]:
         """
         Get products that have all specified tags.
 
         Args:
-            tags: List of required tags
+            tags: list of required tags
 
         Returns:
-            List[Product]: List of products with all specified tags
+            listProduct: list of products with all specified tags
         """
         if not tags:
             raise ValueError("At least one tag must be specified")
 
         return self.repository.get_all(tag_filter=tags)
 
-    def calculate_product_total_nutrition(self, product: Product) -> Optional[dict]:
+    def calculate_product_total_nutrition(self, product: Product) -> None | dict:
         """
         Calculate total nutrition for the entire product package.
 
@@ -663,10 +670,10 @@ class ProductService:
     def _validate_product_data(
         self,
         name: str,
-        calories: Optional[float],
-        macros: Optional[Macros],
-        package_size: Optional[float],
-        ingredients: Optional[List[IngredientQuantity]],
+        calories: None | float,
+        macros: None | Macros,
+        package_size: None | float,
+        ingredients: None | list[IngredientQuantity],
     ) -> None:
         """Validate product data."""
         if not name or not name.strip():
@@ -690,14 +697,3 @@ class ProductService:
         # Basic sanity check
         if calories is not None and calories > 10000:
             logger.warning(f"Very high calorie value: {calories} for product: {name}")
-
-
-# Convenience functions for dependency injection
-def get_ingredient_service(session: Session) -> IngredientService:
-    """Get an IngredientService instance."""
-    return IngredientService(session)
-
-
-def get_product_service(session: Session) -> ProductService:
-    """Get a ProductService instance."""
-    return ProductService(session)

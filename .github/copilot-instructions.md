@@ -21,13 +21,14 @@ Organize code into logical modules:
 *   `main.py`: Application entry point (FastAPI app initialization, middleware, startup/shutdown events).
 *   `run_script_name.py`: Entry point for script running.
 *   `scripts/`: Directory for scripts (e.g., database initialization, application specific process). Each script should have its own subdirectory with an `__init__.py` file.
-*   `routes/`: Directory containing route modules (e.g., `routes/users.py`, `routes/items.py`). Use FastAPI `APIRouter`.
+*   `modules/`: Directory containing route modules (e.g., `users/`, `items/`). Use FastAPI `APIRouter`.
 *   `config.py`: Configuration loading and settings model (using Pydantic).
 *   `services.py`: Business logic layer, orchestrating operations.
 *   `repositories.py`: Data access layer (database interactions, external API clients).
 *   `models.py`: Core internal data structures (Pydantic `BaseModel` representing domain entities, potentially database-aligned if not using ORM models directly).
 *   `schemas.py`: API request/response validation models (Pydantic `BaseModel`, often tailored for specific endpoints, may inherit/compose from `models.py`).
 *   `enums.py`: Application-specific Enum classes.
+*   `dependencies.py`: Dependency injection providers (e.g., database session, authentication).
 *   `exceptions.py`: Custom exception classes.
 *   `utils.py`: General utility functions not specific to any layer.
 *   `constants.py`: Non-enum constant values (if necessary, prefer Enums where appropriate).
