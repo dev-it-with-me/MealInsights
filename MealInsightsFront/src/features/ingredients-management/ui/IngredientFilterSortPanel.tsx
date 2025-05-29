@@ -18,11 +18,11 @@ import { DietTagEnum } from '@/shared/lib/types';
 
 export interface FilterSortState {
   searchTerm: string;
-  shopFilter: string;
+  shopsFilter: string[];
   dietTagsFilter: DietTag[];
   caloriesMin: number | null;
   caloriesMax: number | null;
-  sortBy: 'name' | 'calories' | 'shop' | 'created_at';
+  sortBy: 'name' | 'calories' | 'shops' | 'created_at';
   sortOrder: 'asc' | 'desc';
 }
 
@@ -46,10 +46,10 @@ const IngredientFilterSortPanel: React.FC<IngredientFilterSortPanelProps> = ({
     });
   };
 
-  const handleShopFilterChange = (value: string | null) => {
+  const handleShopsFilterChange = (values: string[]) => {
     onFiltersChange({
       ...filters,
-      shopFilter: value || '',
+      shopsFilter: values,
     });
   };
 
@@ -93,7 +93,7 @@ const IngredientFilterSortPanel: React.FC<IngredientFilterSortPanelProps> = ({
   const clearAllFilters = () => {
     onFiltersChange({
       searchTerm: '',
-      shopFilter: '',
+      shopsFilter: [],
       dietTagsFilter: [],
       caloriesMin: null,
       caloriesMax: null,
@@ -104,7 +104,7 @@ const IngredientFilterSortPanel: React.FC<IngredientFilterSortPanelProps> = ({
 
   const hasActiveFilters = 
     filters.searchTerm || 
-    filters.shopFilter || 
+    filters.shopsFilter.length > 0 || 
     filters.dietTagsFilter.length > 0 || 
     filters.caloriesMin !== null || 
     filters.caloriesMax !== null;
@@ -122,7 +122,7 @@ const IngredientFilterSortPanel: React.FC<IngredientFilterSortPanelProps> = ({
   const sortOptions = [
     { value: 'name', label: 'Name' },
     { value: 'calories', label: 'Calories' },
-    { value: 'shop', label: 'Shop' },
+    { value: 'shops', label: 'Shops' },
     { value: 'created_at', label: 'Date Added' },
   ];
 
@@ -165,11 +165,11 @@ const IngredientFilterSortPanel: React.FC<IngredientFilterSortPanelProps> = ({
           </Grid.Col>
 
           <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-            <Select
-              label="Shop"
-              placeholder="All shops"
-              value={filters.shopFilter || null}
-              onChange={handleShopFilterChange}
+            <MultiSelect
+              label="Shops"
+              placeholder="Select shops to filter"
+              value={filters.shopsFilter}
+              onChange={handleShopsFilterChange}
               data={shopOptions}
               clearable
               disabled={isLoading}

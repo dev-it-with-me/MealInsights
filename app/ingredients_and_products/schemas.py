@@ -22,10 +22,9 @@ class IngredientCreateSchema(BaseModel):
     photo_data: None | bytes = Field(
         default=None, description="Binary data of the ingredient's photo"
     )
-    shop: None | str = Field(
-        default=None,
-        max_length=100,
-        description="Shop where the ingredient can be bought",
+    shops: list[str] = Field(
+        default_factory=list,
+        description="List of shops where the ingredient can be bought",
     )
     calories_per_100g_or_ml: float = Field(
         ..., ge=0, description="Calories per 100g or 100ml of the ingredient"
@@ -50,10 +49,9 @@ class IngredientUpdateSchema(BaseModel):
     photo_data: None | bytes = Field(
         default=None, description="Binary data of the ingredient's photo"
     )
-    shop: None | str = Field(
+    shops: None | list[str] = Field(
         default=None,
-        max_length=100,
-        description="Shop where the ingredient can be bought",
+        description="List of shops where the ingredient can be bought",
     )
     calories_per_100g_or_ml: None | float = Field(
         default=None, ge=0, description="Calories per 100g or 100ml of the ingredient"
@@ -77,8 +75,9 @@ class IngredientResponseSchema(BaseModel):
     photo_data: None | bytes = Field(
         default=None, description="Binary data of the ingredient's photo"
     )
-    shop: None | str = Field(
-        default=None, description="Shop where the ingredient can be bought"
+    shops: list[str] = Field(
+        default_factory=list,
+        description="List of shops where the ingredient can be bought",
     )
     calories_per_100g_or_ml: float = Field(
         ..., description="Calories per 100g or 100ml of the ingredient"

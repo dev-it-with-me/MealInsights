@@ -53,7 +53,7 @@ export const ingredientApi = {
         if (params?.skip !== undefined) queryParams.skip = params.skip;
         if (params?.limit !== undefined) queryParams.limit = params.limit;
         if (params?.name_filter) queryParams.name_filter = params.name_filter;
-        if (params?.shop_filter) queryParams.shop_filter = params.shop_filter;
+        if (params?.shops_filter?.length) queryParams.shops_filter = params.shops_filter.join(',');
         if (params?.tag_filter?.length) {
             // Handle array parameters - backend expects multiple query params
             // This will need to be handled differently in the API client

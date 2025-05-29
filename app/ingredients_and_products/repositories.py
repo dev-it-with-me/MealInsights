@@ -5,6 +5,7 @@ Handles all database operations for the ingredients_and_products module using ra
 
 import uuid
 import logging
+import json
 from typing import List, Any
 
 from sqlalchemy import text
@@ -48,11 +49,18 @@ class IngredientRepository:
             return None
 
         # Ensure all fields expected by Pydantic model are present, with defaults if necessary
+        shops_data = row_dict.get("shops", [])
+        if shops_data is None:
+            shops_data = []
+        elif isinstance(shops_data, str):
+            # Handle legacy single shop data
+            shops_data = [shops_data] if shops_data else []
+
         return Ingredient(
             id=row_dict.get("id"),  # type: ignore
             name=row_dict.get("name"),  # type: ignore
             photo_data=row_dict.get("photo_data"),
-            shop=row_dict.get("shop"),
+            shops=shops_data,
             calories_per_100g_or_ml=row_dict.get("calories_per_100g_or_ml", 0),
             macros_per_100g_or_ml=Macros(
                 protein_g=row_dict.get("macros_protein_g_per_100g_or_ml", 0),
@@ -74,13 +82,13 @@ class IngredientRepository:
 
             sql_insert_ingredient = text("""
                 INSERT INTO ingredients (
-                    id, name, photo_data, shop,
+                    id, name, photo_data, shops,
                     calories_per_100g_or_ml,
                     macros_protein_g_per_100g_or_ml,
                     macros_carbohydrates_g_per_100g_or_ml,
                     macros_fat_g_per_100g_or_ml
                 ) VALUES (
-                    :id, :name, :photo_data, :shop,
+                    :id, :name, :photo_data, :shops,
                     :calories, :protein, :carbs, :fat
                 )
                 RETURNING id; 
@@ -90,7 +98,7 @@ class IngredientRepository:
                 "id": ingredient_id,
                 "name": ingredient_create.name,
                 "photo_data": ingredient_create.photo_data,
-                "shop": ingredient_create.shop,
+                "shops": json.dumps(ingredient_create.shops),
                 "calories": ingredient_create.calories_per_100g_or_ml,
                 "protein": ingredient_create.macros_per_100g_or_ml.protein_g,
                 "carbs": ingredient_create.macros_per_100g_or_ml.carbohydrates_g,
@@ -174,8 +182,10 @@ class IngredientRepository:
         try:
             params: dict[str, Any] = {"limit": limit, "offset": skip}
 
-            # Base query
-            base_sql = "SELECT DISTINCT i.* FROM ingredients i"
+            # Base query - select specific columns to avoid JSON DISTINCT issues
+            base_sql = """SELECT i.id, i.name, i.photo_data, i.shops, i.calories_per_100g_or_ml,
+                         i.macros_protein_g_per_100g_or_ml, i.macros_carbohydrates_g_per_100g_or_ml,
+                         i.macros_fat_g_per_100g_or_ml FROM ingredients i"""
             conditions: List[str] = []
             joins: List[str] = []
 
@@ -184,7 +194,8 @@ class IngredientRepository:
                 params["name_filter"] = f"%{name_filter}%"
 
             if shop_filter:
-                conditions.append("i.shop ILIKE :shop_filter")
+                # Use simple string contains for partial shop matching
+                conditions.append("i.shops::text ILIKE :shop_filter")
                 params["shop_filter"] = f"%{shop_filter}%"
 
             if tag_filter:
@@ -263,7 +274,7 @@ class IngredientRepository:
                 UPDATE ingredients SET
                     name = :name,
                     photo_data = :photo_data,
-                    shop = :shop,
+                    shops = :shops,
                     calories_per_100g_or_ml = :calories,
                     macros_protein_g_per_100g_or_ml = :protein,
                     macros_carbohydrates_g_per_100g_or_ml = :carbs,
@@ -274,7 +285,7 @@ class IngredientRepository:
                 "id": ingredient_update.id,
                 "name": ingredient_update.name,
                 "photo_data": ingredient_update.photo_data,
-                "shop": ingredient_update.shop,
+                "shops": json.dumps(ingredient_update.shops),
                 "calories": ingredient_update.calories_per_100g_or_ml,
                 "protein": ingredient_update.macros_per_100g_or_ml.protein_g,
                 "carbs": ingredient_update.macros_per_100g_or_ml.carbohydrates_g,
@@ -414,11 +425,19 @@ class ProductRepository:
             ).fetchall()
             tags = [DietTagEnum(tag_row[0]) for tag_row in tag_results]
 
+            # Handle shops data for ingredient in IngredientQuantity
+            shops_data = ing_row_dict.get("shops", [])
+            if shops_data is None:
+                shops_data = []
+            elif isinstance(shops_data, str):
+                # Handle legacy single shop data
+                shops_data = [shops_data] if shops_data else []
+
             ingredient_model = Ingredient(
                 id=ing_row_dict.get("id"),  # type: ignore
                 name=ing_row_dict.get("name"),  # type: ignore
                 photo_data=ing_row_dict.get("photo_data"),
-                shop=ing_row_dict.get("shop"),
+                shops=shops_data,
                 calories_per_100g_or_ml=ing_row_dict.get("calories_per_100g_or_ml", 0),
                 macros_per_100g_or_ml=Macros(
                     protein_g=ing_row_dict.get("macros_protein_g_per_100g_or_ml", 0),

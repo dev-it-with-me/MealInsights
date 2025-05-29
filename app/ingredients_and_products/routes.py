@@ -60,7 +60,7 @@ async def create_ingredient(
             calories_per_100g_or_ml=ingredient_data.calories_per_100g_or_ml,
             macros_per_100g_or_ml=ingredient_data.macros_per_100g_or_ml,
             photo_data=ingredient_data.photo_data,
-            shop=ingredient_data.shop,
+            shops=ingredient_data.shops,
             tags=ingredient_data.tags,
         )
 
@@ -164,7 +164,7 @@ async def update_ingredient(
             calories_per_100g_or_ml=ingredient_data.calories_per_100g_or_ml,
             macros_per_100g_or_ml=ingredient_data.macros_per_100g_or_ml,
             photo_data=ingredient_data.photo_data,
-            shop=ingredient_data.shop,
+            shops=ingredient_data.shops,
             tags=ingredient_data.tags,
         )
         if not ingredient:

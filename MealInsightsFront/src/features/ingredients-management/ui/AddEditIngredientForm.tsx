@@ -8,6 +8,7 @@ import {
   TextInput,
   NumberInput,
   MultiSelect,
+  TagsInput,
   FileInput,
   Group,
   Stack,
@@ -73,7 +74,7 @@ const AddEditIngredientForm = ({
     resolver: zodResolver(schema),
     defaultValues: editingMode ? {
       name: ingredient?.name || '',
-      shop: ingredient?.shop || '',
+      shops: ingredient?.shops || [],
       calories_per_100g_or_ml: ingredient?.calories_per_100g_or_ml || 0,
       macros_per_100g_or_ml: ingredient?.macros_per_100g_or_ml || {
         protein: 0,
@@ -83,7 +84,7 @@ const AddEditIngredientForm = ({
       tags: ingredient?.tags || []
     } : {
       name: '',
-      shop: '',
+      shops: [],
       calories_per_100g_or_ml: 0,
       macros_per_100g_or_ml: {
         protein: 0,
@@ -95,12 +96,13 @@ const AddEditIngredientForm = ({
   });
 
   const watchedTags = watch('tags') || [];
+  const watchedShops = watch('shops') || [];
 
   useEffect(() => {
     if (isOpen && ingredient && editingMode) {
       reset({
         name: ingredient.name,
-        shop: ingredient.shop || '',
+        shops: ingredient.shops || [],
         calories_per_100g_or_ml: ingredient.calories_per_100g_or_ml,
         macros_per_100g_or_ml: ingredient.macros_per_100g_or_ml,
         tags: ingredient.tags
@@ -108,7 +110,7 @@ const AddEditIngredientForm = ({
     } else if (isOpen && !editingMode) {
       reset({
         name: '',
-        shop: '',
+        shops: [],
         calories_per_100g_or_ml: 0,
         macros_per_100g_or_ml: {
           protein: 0,
@@ -129,7 +131,7 @@ const AddEditIngredientForm = ({
       if (editingMode && ingredient) {
         apiData = {
           name: data.name,
-          shop: data.shop,
+          shops: data.shops,
           calories_per_100g_or_ml: data.calories_per_100g_or_ml,
           macros_per_100g_or_ml: data.macros_per_100g_or_ml,
           tags: (data.tags || []) as DietTag[]
@@ -137,7 +139,7 @@ const AddEditIngredientForm = ({
       } else {
         apiData = {
           name: data.name!,
-          shop: data.shop,
+          shops: data.shops!,
           calories_per_100g_or_ml: data.calories_per_100g_or_ml!,
           macros_per_100g_or_ml: data.macros_per_100g_or_ml!,
           tags: (data.tags || []) as DietTag[]
@@ -206,12 +208,16 @@ const AddEditIngredientForm = ({
             required
           />
 
-          {/* E3012 - ShopField */}
-          <TextInput
-            label="Shop"
-            placeholder="Where did you buy this ingredient?"
-            error={errors.shop?.message}
-            {...register('shop')}
+          {/* E3012 - ShopsField */}
+          <TagsInput
+            label="Shops"
+            placeholder="Add shops where you can buy this ingredient"
+            value={watchedShops}
+            onChange={(value) => setValue('shops', value)}
+            splitChars={[',', '|', ';']}
+            clearable
+            error={errors.shops?.message}
+            description="Press Enter or comma to add multiple shops"
           />
 
           {/* E3011 - PhotoUploadField - TODO: Implement file upload */}

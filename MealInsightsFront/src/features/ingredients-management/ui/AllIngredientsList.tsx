@@ -92,10 +92,19 @@ const AllIngredientsList: React.FC<AllIngredientsListProps> = ({
             <Text fw={500} size="sm">
               {ingredient.name}
             </Text>
-            {ingredient.shop && (
-              <Text size="xs" c="dimmed">
-                {ingredient.shop}
-              </Text>
+            {ingredient.shops && ingredient.shops.length > 0 && (
+              <Group gap={4}>
+                {ingredient.shops.slice(0, 2).map((shop, index) => (
+                  <Text key={index} size="xs" c="dimmed">
+                    {shop}
+                  </Text>
+                ))}
+                {ingredient.shops.length > 2 && (
+                  <Text size="xs" c="dimmed">
+                    +{ingredient.shops.length - 2} more
+                  </Text>
+                )}
+              </Group>
             )}
           </Stack>
         </Group>

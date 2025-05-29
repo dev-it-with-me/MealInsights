@@ -8,7 +8,7 @@ export interface Ingredient {
     name: string;
     photo_data?: Uint8Array | null;
     photo_url?: string | null;
-    shop?: string | null;
+    shops: string[];
     calories_per_100g_or_ml: number;
     macros_per_100g_or_ml: Macros;
     tags: DietTag[];
@@ -19,7 +19,7 @@ export interface Ingredient {
 export interface CreateIngredientRequest {
     name: string;
     photo_data?: Uint8Array | null;
-    shop?: string | null;
+    shops: string[];
     calories_per_100g_or_ml: number;
     macros_per_100g_or_ml: Macros;
     tags: DietTag[];
@@ -28,7 +28,7 @@ export interface CreateIngredientRequest {
 export interface UpdateIngredientRequest {
     name?: string;
     photo_data?: Uint8Array | null;
-    shop?: string | null;
+    shops?: string[];
     calories_per_100g_or_ml?: number;
     macros_per_100g_or_ml?: Macros;
     tags?: DietTag[];
@@ -43,7 +43,7 @@ export interface IngredientsListResponse {
 
 export interface IngredientFilters {
     name_filter?: string;
-    shop_filter?: string;
+    shops_filter?: string[];
     tag_filter?: DietTag[];
 }
 

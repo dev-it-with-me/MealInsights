@@ -153,7 +153,7 @@ const IngredientsList = ({
           <Table.Tr>
             <Table.Th>Photo</Table.Th>
             <Table.Th>Name</Table.Th>
-            <Table.Th>Shop</Table.Th>
+            <Table.Th>Shops</Table.Th>
             <Table.Th>Calories/100g</Table.Th>
             <Table.Th>Macros/100g</Table.Th>
             <Table.Th>Tags</Table.Th>
@@ -185,11 +185,26 @@ const IngredientsList = ({
                 <Text fw={500}>{ingredient.name}</Text>
               </Table.Td>
 
-              {/* ShopColumn */}
+              {/* ShopsColumn */}
               <Table.Td>
-                <Text size="sm" c="dimmed">
-                  {ingredient.shop || 'Not specified'}
-                </Text>
+                {ingredient.shops && ingredient.shops.length > 0 ? (
+                  <Group gap={4} wrap="wrap">
+                    {ingredient.shops.map((shop, index) => (
+                      <Badge
+                        key={index}
+                        size="xs"
+                        variant="light"
+                        color="gray"
+                      >
+                        {shop}
+                      </Badge>
+                    ))}
+                  </Group>
+                ) : (
+                  <Text size="sm" c="dimmed">
+                    Not specified
+                  </Text>
+                )}
               </Table.Td>
 
               {/* CaloriesColumn */}

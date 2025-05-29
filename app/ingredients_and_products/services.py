@@ -37,7 +37,7 @@ class IngredientService:
         calories_per_100g_or_ml: float,
         macros_per_100g_or_ml: Macros,
         photo_data: None | bytes = None,
-        shop: None | str = None,
+        shops: None | list[str] = None,
         tags: None | list[DietTagEnum] = None,
     ) -> Ingredient:
         """
@@ -47,9 +47,9 @@ class IngredientService:
             name: Ingredient name
             calories_per_100g_or_ml: Calories per 100g or 100ml
             macros_per_100g_or_ml: Macronutrients per 100g or 100ml
-            photo_data: None |  photo data
-            shop: None |  shop where ingredient can be bought
-            tags: None |  list of diet tags
+            photo_data: None | photo data
+            shops: None | list of shops where ingredient can be bought
+            tags: None | list of diet tags
 
         Returns:
             Ingredient: The created ingredient
@@ -64,13 +64,18 @@ class IngredientService:
             name, calories_per_100g_or_ml, macros_per_100g_or_ml
         )
 
+        # Clean and process shops list
+        cleaned_shops = []
+        if shops:
+            cleaned_shops = [shop.strip() for shop in shops if shop and shop.strip()]
+
         # Instantiate Ingredient model instead of raw dict
         ingredient = Ingredient(
             name=name.strip(),
             calories_per_100g_or_ml=calories_per_100g_or_ml,
             macros_per_100g_or_ml=macros_per_100g_or_ml,
             photo_data=photo_data,
-            shop=shop.strip() if shop else None,
+            shops=cleaned_shops,
             tags=tags or [],
         )
         logger.info(f"Creating ingredient: {name}")
@@ -133,7 +138,7 @@ class IngredientService:
         calories_per_100g_or_ml: None | float = None,
         macros_per_100g_or_ml: None | Macros = None,
         photo_data: None | bytes = None,
-        shop: None | str = None,
+        shops: None | list[str] = None,
         tags: None | list[DietTagEnum] = None,
     ) -> Ingredient | None:
         """
@@ -141,12 +146,12 @@ class IngredientService:
 
         Args:
             ingredient_id: The ingredient ID
-            name: None |  new name
-            calories_per_100g_or_ml: None |  new calories
-            macros_per_100g_or_ml: None |  new macros
-            photo_data: None |  new photo data
-            shop: None |  new shop
-            tags: None |  new tags list
+            name: None | new name
+            calories_per_100g_or_ml: None | new calories
+            macros_per_100g_or_ml: None | new macros
+            photo_data: None | new photo data
+            shops: None | new list of shops
+            tags: None | new tags list
 
         Returns:
             Ingredient: The updated ingredient
@@ -178,6 +183,11 @@ class IngredientService:
         if not existing:
             raise IngredientNotFoundError(str(ingredient_id))
 
+        # Clean and process shops list if provided
+        cleaned_shops = existing.shops
+        if shops is not None:
+            cleaned_shops = [shop.strip() for shop in shops if shop and shop.strip()]
+
         # Build updated Ingredient model
         updated = Ingredient(
             id=ingredient_id,
@@ -193,7 +203,7 @@ class IngredientService:
                 else existing.macros_per_100g_or_ml
             ),
             photo_data=photo_data if photo_data is not None else existing.photo_data,
-            shop=shop.strip() if shop is not None else existing.shop,
+            shops=cleaned_shops,
             tags=tags if tags is not None else existing.tags,
         )
         logger.info(f"Updating ingredient: {ingredient_id}")
@@ -385,19 +395,28 @@ class ProductService:
             package_size_g_or_ml,
             ingredients,
         )
-
+        tags_from_ingredients: list[DietTagEnum] = []
         # Validate ingredients exist if provided
         if ingredients:
             for ingredient_quantity in ingredients:
                 try:
-                    self.ingredient_repository.get_by_id(
-                        ingredient_quantity.ingredient.id
+                    ingredient: Ingredient | None = (
+                        self.ingredient_repository.get_by_id(
+                            ingredient_quantity.ingredient.id
+                        )
                     )
+                    if ingredient is not None:
+                        tags_from_ingredients.extend(ingredient.tags)
                 except IngredientNotFoundError:
                     raise ValueError(
                         f"Ingredient with ID {ingredient_quantity.ingredient.id} not found"
                     )
-
+        if tags is not None:
+            tags.extend(tags_from_ingredients)
+            # Remove duplicates
+            tags = list(set(tags))
+        else:
+            tags = list(set(tags_from_ingredients))
         # Instantiate Product model instead of raw dict
         product = Product(
             name=name.strip(),
@@ -538,15 +557,20 @@ class ProductService:
         if package_size_g_or_ml is not None and package_size_g_or_ml <= 0:
             raise ValueError("Package size must be positive")
 
+        tags_from_ingredients: list[DietTagEnum] = []
         # Validate ingredients exist if provided
         if ingredients is not None:
             for ingredient_quantity in ingredients:
                 if ingredient_quantity.quantity <= 0:
                     raise InvalidQuantityError(ingredient_quantity.quantity)
                 try:
-                    self.ingredient_repository.get_by_id(
-                        ingredient_quantity.ingredient.id
+                    ingredient: Ingredient | None = (
+                        self.ingredient_repository.get_by_id(
+                            ingredient_quantity.ingredient.id
+                        )
                     )
+                    if ingredient is not None:
+                        tags_from_ingredients.extend(ingredient.tags)
                 except IngredientNotFoundError:
                     raise ValueError(
                         f"Ingredient with ID {ingredient_quantity.ingredient.id} not found"
@@ -557,6 +581,12 @@ class ProductService:
         if not existing:
             raise ProductNotFoundError(str(product_id))
 
+        if tags is not None:
+            tags.extend(tags_from_ingredients)
+            # Remove duplicates
+            tags = list(set(tags))
+        else:
+            tags = list(set(tags_from_ingredients))
         # Build updated Product model
         updated = Product(
             id=product_id,

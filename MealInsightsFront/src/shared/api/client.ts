@@ -36,7 +36,29 @@ export class ApiClient {
                 throw new Error(errorData.detail || `HTTP ${response.status}`);
             }
 
-            return await response.json();
+            // Handle responses with no content (like 204 No Content)
+            if (response.status === 204 || response.headers.get('content-length') === '0') {
+                return undefined as T;
+            }
+
+            // Check if response has content before parsing JSON
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return await response.json();
+            }
+
+            // If no JSON content type, try to parse anyway but handle empty response
+            const text = await response.text();
+            if (!text) {
+                return undefined as T;
+            }
+
+            try {
+                return JSON.parse(text);
+            } catch {
+                // If JSON parsing fails, return the text as-is (though this should be rare)
+                return text as T;
+            }
         } catch (error) {
             console.error('API request failed:', error);
             throw error;

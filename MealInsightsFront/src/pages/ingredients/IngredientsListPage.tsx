@@ -18,7 +18,7 @@ const IngredientsListPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [filters, setFilters] = useState<FilterSortState>({
     searchTerm: '',
-    shopFilter: '',
+    shopsFilter: [],
     dietTagsFilter: [],
     caloriesMin: null,
     caloriesMax: null,
@@ -50,8 +50,8 @@ const IngredientsListPage = () => {
   const availableShops = useMemo(() => {
     const shops = new Set<string>();
     ingredients.forEach(ingredient => {
-      if (ingredient.shop) {
-        shops.add(ingredient.shop);
+      if (ingredient.shops && ingredient.shops.length > 0) {
+        ingredient.shops.forEach(shop => shops.add(shop));
       }
     });
     return Array.from(shops).sort();
@@ -66,13 +66,18 @@ const IngredientsListPage = () => {
       const searchLower = filters.searchTerm.toLowerCase();
       filtered = filtered.filter(ingredient =>
         ingredient.name.toLowerCase().includes(searchLower) ||
-        (ingredient.shop && ingredient.shop.toLowerCase().includes(searchLower))
+        (ingredient.shops && ingredient.shops.some(shop => 
+          shop.toLowerCase().includes(searchLower)))
       );
     }
 
-    // Apply shop filter
-    if (filters.shopFilter) {
-      filtered = filtered.filter(ingredient => ingredient.shop === filters.shopFilter);
+    // Apply shops filter
+    if (filters.shopsFilter.length > 0) {
+      filtered = filtered.filter(ingredient => 
+        ingredient.shops && 
+        filters.shopsFilter.some(filterShop => 
+          ingredient.shops.includes(filterShop))
+      );
     }
 
     // Apply diet tags filter
@@ -109,10 +114,10 @@ const IngredientsListPage = () => {
           const bCalories = b.calories_per_100g_or_ml || 0;
           comparison = aCalories - bCalories;
           break;
-        case 'shop':
-          const aShop = a.shop || '';
-          const bShop = b.shop || '';
-          comparison = aShop.localeCompare(bShop);
+        case 'shops':
+          const aShops = a.shops && a.shops.length > 0 ? a.shops[0] : '';
+          const bShops = b.shops && b.shops.length > 0 ? b.shops[0] : '';
+          comparison = aShops.localeCompare(bShops);
           break;
         case 'created_at':
           comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();

@@ -19,6 +19,7 @@ from sqlalchemy import (
     String,
     REAL,
     ForeignKey,
+    JSON,
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID, ENUM as PG_ENUM
 
@@ -81,7 +82,7 @@ ingredients_table = Table(
     ),
     Column("name", String(100), nullable=False),
     Column("photo_data", sqlalchemy.LargeBinary, nullable=True),
-    Column("shop", String(100), nullable=True),
+    Column("shops", JSON, nullable=True, server_default=text("'[]'::json")),
     Column("calories_per_100g_or_ml", REAL, nullable=False, server_default=text("0")),
     Column(
         "macros_protein_g_per_100g_or_ml",

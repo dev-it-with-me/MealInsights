@@ -17,10 +17,8 @@ export const ingredientCreateSchema = z.object({
     name: z.string()
         .min(1, 'Name is required')
         .max(100, 'Name must be less than 100 characters'),
-    shop: z.string()
-        .max(100, 'Shop name must be less than 100 characters')
-        .optional()
-        .nullable(),
+    shops: z.array(z.string())
+        .default([]),
     calories_per_100g_or_ml: z.number()
         .min(0, 'Calories must be non-negative'),
     macros_per_100g_or_ml: macrosSchema,
@@ -32,10 +30,8 @@ export const ingredientUpdateSchema = z.object({
         .min(1, 'Name is required')
         .max(100, 'Name must be less than 100 characters')
         .optional(),
-    shop: z.string()
-        .max(100, 'Shop name must be less than 100 characters')
-        .optional()
-        .nullable(),
+    shops: z.array(z.string())
+        .optional(),
     calories_per_100g_or_ml: z.number()
         .min(0, 'Calories must be non-negative')
         .optional(),
@@ -45,7 +41,7 @@ export const ingredientUpdateSchema = z.object({
 
 export const ingredientFilterSchema = z.object({
     name_filter: z.string().optional(),
-    shop_filter: z.string().optional(),
+    shops_filter: z.array(z.string()).optional(),
     tag_filter: z.array(z.enum(dietTagValues)).optional(),
     skip: z.number().min(0).optional(),
     limit: z.number().min(1).max(1000).optional(),

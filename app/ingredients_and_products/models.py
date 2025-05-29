@@ -20,10 +20,9 @@ class Ingredient(BaseModel):
     photo_data: bytes | None = Field(
         default=None, description="Binary data of the ingredient's photo"
     )  # Changed from photo_url: HttpUrl | None
-    shop: str | None = Field(
-        default=None,
-        max_length=100,
-        description="Shop where the ingredient can be bought",
+    shops: list[str] = Field(
+        default_factory=list,
+        description="List of shops where the ingredient can be bought",
     )
     calories_per_100g_or_ml: float = Field(
         ..., ge=0, description="Calories per 100g or 100ml of the ingredient"
