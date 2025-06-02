@@ -8,16 +8,12 @@ import uuid
 from sqlalchemy.orm import Session
 
 from app.models import Macros
-from app.enums import DietTagEnum, UnitEnum
-from .models import Ingredient, Product, IngredientQuantity
+from app.enums import DietTagEnum
+from .models import Ingredient, Product
 from .repositories import IngredientRepository, ProductRepository
 from .exceptions import (
     IngredientNotFoundError,
     ProductNotFoundError,
-    DuplicateIngredientError,
-    DuplicateProductError,
-    InvalidQuantityError,
-    DatabaseError,
 )
 
 logger = logging.getLogger(__name__)
@@ -262,45 +258,6 @@ class IngredientService:
 
         return self.repository.get_all(tag_filter=tags)
 
-    def calculate_ingredient_nutrition_for_quantity(
-        self, ingredient: Ingredient, quantity: float, unit: UnitEnum
-    ) -> dict:
-        """
-        Calculate nutrition values for a specific quantity of an ingredient.
-
-        Args:
-            ingredient: The ingredient
-            quantity: The quantity
-            unit: The unit of measurement
-
-        Returns:
-            dict: Calculated nutrition values
-
-        Raises:
-            InvalidQuantityError: If quantity is invalid
-            ValueError: If unit conversion is not supported
-        """
-        if quantity <= 0:
-            raise InvalidQuantityError(quantity)
-
-        # Convert quantity to grams/ml for calculation
-        # For simplicity, assuming g and ml are equivalent for calculation
-        # In a real application, you might need more sophisticated unit conversion
-        conversion_factor = self._get_unit_conversion_factor(unit)
-        quantity_in_g_or_ml = quantity * conversion_factor
-
-        # Calculate based on per 100g/ml values
-        ratio = quantity_in_g_or_ml / 100.0
-
-        return {
-            "calories": ingredient.calories_per_100g_or_ml * ratio,
-            "protein_g": ingredient.macros_per_100g_or_ml.protein_g * ratio,
-            "carbohydrates_g": ingredient.macros_per_100g_or_ml.carbohydrates_g * ratio,
-            "fat_g": ingredient.macros_per_100g_or_ml.fat_g * ratio,
-            "quantity": quantity,
-            "unit": unit.value,
-        }
-
     def _validate_ingredient_data(
         self, name: str, calories: float, macros: Macros
     ) -> None:
@@ -319,27 +276,6 @@ class IngredientService:
             logger.warning(
                 f"Very high calorie value: {calories} for ingredient: {name}"
             )
-
-    def _get_unit_conversion_factor(self, unit: UnitEnum) -> float:
-        """Get conversion factor to grams/ml."""
-        conversion_factors = {
-            UnitEnum.GRAM: 1.0,
-            UnitEnum.MILLILITER: 1.0,
-            UnitEnum.KILOGRAM: 1000.0,
-            UnitEnum.LITER: 1000.0,
-            UnitEnum.PIECE: 100.0,  # Assume 100g per piece
-            UnitEnum.TABLESPOON: 15.0,  # Assume 15ml per tablespoon
-            UnitEnum.TEASPOON: 5.0,  # Assume 5ml per teaspoon
-            UnitEnum.CUP: 240.0,  # Assume 240ml per cup
-            UnitEnum.OUNCE: 28.35,  # 1 oz ≈ 28.35g
-            UnitEnum.POUND: 453.6,  # 1 lb ≈ 453.6g
-        }
-
-        factor = conversion_factors.get(unit)
-        if factor is None:
-            raise ValueError(f"Unit conversion not supported for: {unit}")
-
-        return factor
 
 
 class ProductService:
@@ -361,7 +297,7 @@ class ProductService:
         calories_per_100g_or_ml: None | float = None,
         macros_per_100g_or_ml: None | Macros = None,
         package_size_g_or_ml: None | float = None,
-        ingredients: None | list[IngredientQuantity] = None,
+        ingredients: None | list[Ingredient] = None,
         tags: None | list[DietTagEnum] = None,
     ) -> Product:
         """
@@ -398,19 +334,16 @@ class ProductService:
         tags_from_ingredients: list[DietTagEnum] = []
         # Validate ingredients exist if provided
         if ingredients:
-            for ingredient_quantity in ingredients:
+            for ingredient in ingredients:
                 try:
-                    ingredient: Ingredient | None = (
-                        self.ingredient_repository.get_by_id(
-                            ingredient_quantity.ingredient.id
-                        )
+                    # Validate that the ingredient exists
+                    existing_ingredient: Ingredient | None = (
+                        self.ingredient_repository.get_by_id(ingredient.id)
                     )
-                    if ingredient is not None:
-                        tags_from_ingredients.extend(ingredient.tags)
+                    if existing_ingredient is not None:
+                        tags_from_ingredients.extend(existing_ingredient.tags)
                 except IngredientNotFoundError:
-                    raise ValueError(
-                        f"Ingredient with ID {ingredient_quantity.ingredient.id} not found"
-                    )
+                    raise ValueError(f"Ingredient with ID {ingredient.id} not found")
         if tags is not None:
             tags.extend(tags_from_ingredients)
             # Remove duplicates
@@ -512,7 +445,7 @@ class ProductService:
         calories_per_100g_or_ml: None | float = None,
         macros_per_100g_or_ml: None | Macros = None,
         package_size_g_or_ml: None | float = None,
-        ingredients: None | list[IngredientQuantity] = None,
+        ingredients: None | list[Ingredient] = None,
         tags: None | list[DietTagEnum] = None,
     ) -> Product | None:
         """
@@ -560,21 +493,16 @@ class ProductService:
         tags_from_ingredients: list[DietTagEnum] = []
         # Validate ingredients exist if provided
         if ingredients is not None:
-            for ingredient_quantity in ingredients:
-                if ingredient_quantity.quantity <= 0:
-                    raise InvalidQuantityError(ingredient_quantity.quantity)
+            for ingredient in ingredients:
                 try:
-                    ingredient: Ingredient | None = (
-                        self.ingredient_repository.get_by_id(
-                            ingredient_quantity.ingredient.id
-                        )
+                    # Validate that the ingredient exists
+                    existing_ingredient: Ingredient | None = (
+                        self.ingredient_repository.get_by_id(ingredient.id)
                     )
-                    if ingredient is not None:
-                        tags_from_ingredients.extend(ingredient.tags)
+                    if existing_ingredient is not None:
+                        tags_from_ingredients.extend(existing_ingredient.tags)
                 except IngredientNotFoundError:
-                    raise ValueError(
-                        f"Ingredient with ID {ingredient_quantity.ingredient.id} not found"
-                    )
+                    raise ValueError(f"Ingredient with ID {ingredient.id} not found")
 
         # Fetch existing product
         existing = self.repository.get_by_id(product_id)
@@ -703,7 +631,7 @@ class ProductService:
         calories: None | float,
         macros: None | Macros,
         package_size: None | float,
-        ingredients: None | list[IngredientQuantity],
+        ingredients: None | list[Ingredient],
     ) -> None:
         """Validate product data."""
         if not name or not name.strip():
@@ -719,10 +647,8 @@ class ProductService:
         if package_size is not None and package_size <= 0:
             raise ValueError("Package size must be positive")
 
-        if ingredients:
-            for ingredient_quantity in ingredients:
-                if ingredient_quantity.quantity <= 0:
-                    raise InvalidQuantityError(ingredient_quantity.quantity)
+        # Note: Ingredient validation simplified since we no longer have quantities per ingredient
+        # Individual ingredient validation is handled elsewhere
 
         # Basic sanity check
         if calories is not None and calories > 10000:

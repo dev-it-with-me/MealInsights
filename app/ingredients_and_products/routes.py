@@ -282,7 +282,7 @@ async def create_product(
             calories_per_100g_or_ml=product_data.calories_per_100g_or_ml,
             macros_per_100g_or_ml=product_data.macros_per_100g_or_ml,
             package_size_g_or_ml=product_data.package_size_g_or_ml,
-            ingredients=None,  # TODO: Convert IngredientQuantityCreateSchema to IngredientQuantity
+            ingredients=None,  # TODO: Handle ingredients conversion from IDs to Ingredient objects
             tags=product_data.tags,
         )
 
@@ -391,7 +391,7 @@ async def update_product(
             calories_per_100g_or_ml=product_data.calories_per_100g_or_ml,
             macros_per_100g_or_ml=product_data.macros_per_100g_or_ml,
             package_size_g_or_ml=product_data.package_size_g_or_ml,
-            ingredients=None,  # TODO: Convert IngredientQuantityCreateSchema to IngredientQuantity
+            ingredients=None,  # TODO: Handle ingredients conversion from IDs to Ingredient objects
             tags=product_data.tags,
         )
         if product is None:

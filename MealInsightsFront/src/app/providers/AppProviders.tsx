@@ -6,7 +6,7 @@ import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 
 // Pages
-import { ManageIngredientsPage, IngredientsListPage } from '@/pages/ingredients';
+import { ItemsManagementPage } from '@/pages/ingredients';
 import MainLayout from '@/widgets/layout/MainLayout';
 
 const router = createBrowserRouter([
@@ -20,11 +20,7 @@ const router = createBrowserRouter([
       },
       {
         path: 'ingredients',
-        element: <IngredientsListPage />,
-      },
-      {
-        path: 'ingredients/manage',
-        element: <ManageIngredientsPage />,
+        element: <ItemsManagementPage />,
       },
     ],
   },

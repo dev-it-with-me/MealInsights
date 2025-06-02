@@ -49,3 +49,31 @@ export interface ApiError {
     detail: string;
     error_type: string;
 }
+
+// Unified types for managing both ingredients and products
+export type ItemType = 'ingredient' | 'product';
+
+export interface UnifiedItem {
+    id: string;
+    name: string;
+    type: ItemType;
+    photo_url?: string | null;
+    tags: string[];
+    calories_per_100g_or_ml?: number | null;
+    created_at: string;
+    updated_at: string;
+    // Type-specific data - will be populated based on type
+    ingredient?: any; // Will contain Ingredient data if type is 'ingredient'
+    product?: any; // Will contain Product data if type is 'product'
+}
+
+export interface UnifiedItemFilters {
+    name_filter?: string;
+    type_filter?: ItemType | 'all';
+    tag_filter?: string[];
+}
+
+export interface UnifiedItemSearchParams extends UnifiedItemFilters {
+    skip?: number;
+    limit?: number;
+}

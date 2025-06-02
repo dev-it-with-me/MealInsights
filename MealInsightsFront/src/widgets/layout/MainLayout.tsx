@@ -3,7 +3,6 @@ import {
   AppShell, 
   Text, 
   Group, 
-  NavLink,
   Container,
   Burger,
   rem
@@ -25,8 +24,7 @@ const MainLayout = () => {
 
   const navigationItems = [
     { icon: IconHome, label: 'Home', href: '/' },
-    { icon: IconList, label: 'All Ingredients', href: '/ingredients' },
-    { icon: IconLeaf, label: 'Manage Ingredients', href: '/ingredients/manage' },
+    { icon: IconList, label: 'Ingredients & Products', href: '/ingredients' },
     { icon: IconCalendar, label: 'Meal Planning', href: '/meals' },
     { icon: IconShoppingCart, label: 'Shopping Lists', href: '/shopping' },
     { icon: IconChartLine, label: 'Nutrition Tracking', href: '/tracking' },

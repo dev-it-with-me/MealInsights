@@ -15,7 +15,7 @@ from sqlalchemy.engine import CursorResult
 
 from app.enums import DietTagEnum, UnitEnum
 from app.models import Macros  # Assuming Macros is a Pydantic model
-from .models import Ingredient, Product, IngredientQuantity  # Pydantic models
+from .models import Ingredient, Product, Ingredient  # Pydantic models
 from .exceptions import (
     DatabaseError,
     IngredientNotFoundError,
@@ -371,7 +371,7 @@ class ProductRepository:
         self,
         row_dict: None | dict[str, Any],
         tags: List[DietTagEnum],
-        product_ingredients: List[IngredientQuantity],
+        product_ingredients: List[Ingredient],
     ) -> None | Product:
         """Converts a database row dictionary to a Product Pydantic model."""
         if not row_dict:
@@ -405,8 +405,8 @@ class ProductRepository:
 
     def _fetch_ingredient_details_for_product(
         self, ingredient_id: uuid.UUID, quantity: float, unit: UnitEnum
-    ) -> None | IngredientQuantity:
-        """Fetches a single ingredient's details and wraps it in IngredientQuantity."""
+    ) -> None | Ingredient:
+        """Fetches a single ingredient's details and wraps it in Ingredient."""
         # This uses the IngredientRepository's get_by_id for simplicity and consistency
         # If IngredientRepository is not available here, you'd replicate its logic
         # For now, let's assume we might need a direct way or pass IngredientRepository instance
@@ -425,7 +425,7 @@ class ProductRepository:
             ).fetchall()
             tags = [DietTagEnum(tag_row[0]) for tag_row in tag_results]
 
-            # Handle shops data for ingredient in IngredientQuantity
+            # Handle shops data for ingredient in Ingredient
             shops_data = ing_row_dict.get("shops", [])
             if shops_data is None:
                 shops_data = []
@@ -448,9 +448,7 @@ class ProductRepository:
                 ),
                 tags=tags,
             )
-            return IngredientQuantity(
-                ingredient=ingredient_model, quantity=quantity, unit=unit
-            )
+            return Ingredient(ingredient=ingredient_model)
         except SQLAlchemyError as e:
             logger.error(
                 f"DB error in _fetch_ingredient_details_for_product for {ingredient_id}: {e}"
@@ -574,7 +572,7 @@ class ProductRepository:
             tags = [DietTagEnum(tag_row[0]) for tag_row in tag_results]
 
             # Fetch product ingredients
-            product_ingredients_list: List[IngredientQuantity] = []
+            product_ingredients_list: List[Ingredient] = []
             sql_pi = text("""
                 SELECT ingredient_id, quantity, unit 
                 FROM product_ingredients 

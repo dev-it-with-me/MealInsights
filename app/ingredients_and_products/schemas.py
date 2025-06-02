@@ -8,8 +8,7 @@ import uuid
 from pydantic import BaseModel, Field
 
 from app.models import Macros
-from app.enums import DietTagEnum, UnitEnum
-from .models import Ingredient, Product, IngredientQuantity
+from app.enums import DietTagEnum
 
 
 # Ingredient Schemas
@@ -105,27 +104,7 @@ class IngredientsListSchema(BaseModel):
     model_config = {"extra": "forbid"}
 
 
-# Ingredient Quantity Schemas
-class IngredientQuantityCreateSchema(BaseModel):
-    """Schema for creating ingredient quantity."""
-
-    ingredient_id: uuid.UUID = Field(..., description="ID of the ingredient")
-    quantity: float = Field(..., ge=0, description="The amount of the ingredient")
-    unit: UnitEnum = Field(..., description="The unit of measurement for the quantity")
-
-    model_config = {"extra": "forbid"}
-
-
-class IngredientQuantityResponseSchema(BaseModel):
-    """Schema for ingredient quantity responses."""
-
-    ingredient: IngredientResponseSchema = Field(
-        ..., description="The ingredient itself"
-    )
-    quantity: float = Field(..., description="The amount of the ingredient")
-    unit: UnitEnum = Field(..., description="The unit of measurement for the quantity")
-
-    model_config = {"extra": "forbid", "from_attributes": True}
+# NOTE: IngredientQuantity model and schemas have been removed in favor of simplified Product.ingredients structure
 
 
 # Product Schemas
@@ -160,9 +139,9 @@ class ProductCreateSchema(BaseModel):
         ge=0,
         description="Total size of the package in grams or milliliters",
     )
-    ingredients: None | list[IngredientQuantityCreateSchema] = Field(
+    ingredients: None | list[uuid.UUID] = Field(
         default=None,
-        description="list of ingredients and their quantities in this product",
+        description="List of ingredient IDs used in this product",
     )
     tags: list[DietTagEnum] = Field(
         default_factory=list,
@@ -203,9 +182,9 @@ class ProductUpdateSchema(BaseModel):
         ge=0,
         description="Total size of the package in grams or milliliters",
     )
-    ingredients: None | list[IngredientQuantityCreateSchema] = Field(
+    ingredients: None | list[uuid.UUID] = Field(
         default=None,
-        description="list of ingredients and their quantities in this product",
+        description="List of ingredient IDs used in this product",
     )
     tags: None | list[DietTagEnum] = Field(
         default=None,
@@ -237,9 +216,9 @@ class ProductResponseSchema(BaseModel):
     package_size_g_or_ml: None | float = Field(
         default=None, description="Total size of the package in grams or milliliters"
     )
-    ingredients: None | list[IngredientQuantityResponseSchema] = Field(
+    ingredients: None | list[IngredientResponseSchema] = Field(
         default=None,
-        description="list of ingredients and their quantities in this product",
+        description="List of ingredients used in this product",
     )
     tags: list[DietTagEnum] = Field(..., description="Tags associated with the product")
 

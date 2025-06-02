@@ -24,24 +24,17 @@ Provides a consistent navigation structure for all pages. - ---
 
 ## Pages
 
-### **Page P0100.ManageIngredientsPage**
-Allows users to add, view, edit, and delete ingredients. - [Layout L0001.MainAppLayout](#layout-l0001mainapplayout) - ---
-URL: `/ingredients/manage`
+### **Page P0100.ManageItemsPage**
+Allows users to add, view, edit, and delete both ingredients and products in a unified interface. Provides comprehensive management and viewing capabilities for all items. - [Layout L0001.MainAppLayout](#layout-l0001mainapplayout) - ---
+URL: `/ingredients`
 
 | ID    | Name                     | Type  | Functionality                                                                                      | Goal                                                      | Trigger                                     | Link      |
 | :---- | :----------------------- | :---- | :------------------------------------------------------------------------------------------------- | :-------------------------------------------------------- | :------------------------------------------ | :-------- |
-| C1000 | AddEditIngredientForm    | Form  | Allows input/edit of ingredient details (name, photo, shop, calories, macros, tags).               | To create or update an ingredient.                        | `Button E3001 (On Add New)` / `Click C1001 Item (On Edit)` | [Link to C1000](./components/C1000.md#form-c1000addeditingredientform)  |
+| C1000 | AddEditIngredientForm    | Form  | Allows input/edit of ingredient details (name, photo, shop, calories, macros, tags).               | To create or update an ingredient.                        | `Button E3001 (On Add New)` / `Click C1025 Item (On Edit)` | [Link to C1000](./components/C1000.md#form-c1000addeditingredientform)  |
+| C1024 | AddEditProductForm       | Form  | Allows input/edit of product details (name, brand, barcode, package size, calories, macros, tags). | To create or update a product.                           | `Button E3002 (On Add New)` / `Click C1025 Item (On Edit)` | [Link to C1024](./components/C1024.md#form-c1024addeditproductform)  |
 | E3001 | AddNewIngredientButton   | Button| Opens the AddEditIngredientForm for a new ingredient.                                              | To initiate adding a new ingredient.                      | ---                                         | ---       |
-| C1001 | IngredientsList     | List of Dynamic Objects | Displays existing ingredients with options to edit or delete.                                      | To view and manage ingredients on this page.              | ---                                         | [Link to C1001](./components/C1001.md#listofdynamicobjects-c1001ingredientslist)  |
-
-### **Page P0101.IngredientsListPage**
-Displays a comprehensive list of all available ingredients. - [Layout L0001.MainAppLayout](#layout-l0001mainapplayout) - ---
-URL: `/ingredients`
-
-| ID    | Name                        | Type    | Functionality                                                                   | Goal                                                         | Trigger | Link      |
-| :---- | :-------------------------- | :------ | :------------------------------------------------------------------------------ | :----------------------------------------------------------- | :------ | :-------- |
-| C1002 | AllIngredientsList        | List of Dynamic Objects   | Displays all ingredients with details (name, photo, shop, calories, macros, tags). | To provide a browseable view of all ingredients.              | ---     | [Link to C1002](./components/C1002.md#listofdynamicobjects-c1002allingredientslist)  |
-| C1003 | IngredientFilterSortPanel   | Panel   | Provides options to filter (e.g., by tag, shop) and sort the ingredients list.  | To help users find specific ingredients easily.              | ---     | [Link to C1003](./components/C1003.md#panel-c1003ingredientfiltersortpanel)  |
+| E3002 | AddNewProductButton      | Button| Opens the AddEditProductForm for a new product.                                                    | To initiate adding a new product.                         | ---                                         | ---       |
+| C1025 | UnifiedItemsList         | List of Dynamic Objects | Displays both ingredients and products with unified filtering and management capabilities.          | To view and manage all items in one interface.            | ---                                         | [Link to C1025](./components/C1025.UnifiedItemsList.md#component-documentation-c1025unifieditemslist)  |
 
 ### **Page P0102.ManageMealsPage**
 Allows users to create, view, edit, and delete meals. - [Layout L0001.MainAppLayout](#layout-l0001mainapplayout) - ---

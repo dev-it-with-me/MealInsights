@@ -38,16 +38,6 @@ class Ingredient(BaseModel):
     model_config = {"extra": "forbid", "from_attributes": True}
 
 
-class IngredientQuantity(BaseModel):
-    """Represents a specific quantity of a given ingredient."""
-
-    ingredient: Ingredient = Field(..., description="The ingredient itself")
-    quantity: float = Field(..., ge=0, description="The amount of the ingredient")
-    unit: UnitEnum = Field(..., description="The unit of measurement for the quantity")
-
-    model_config = {"extra": "forbid", "from_attributes": True}
-
-
 class Product(BaseModel):
     """Core model representing a product (e.g., a packaged item from a shop)."""
 
@@ -87,9 +77,9 @@ class Product(BaseModel):
     )
 
     # If the product's composition is known in terms of ingredients
-    ingredients: list[IngredientQuantity] | None = Field(
+    ingredients: list[Ingredient] | None = Field(
         default=None,
-        description="List of ingredients and their quantities in this product",
+        description="List of ingredients used in this product",
     )
     # For now, keeping it simple. Ingredient composition can be a future enhancement.
 
