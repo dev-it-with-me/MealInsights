@@ -63,11 +63,9 @@ class IngredientRepository:
             shops=shops_data,
             calories_per_100g_or_ml=row_dict.get("calories_per_100g_or_ml", 0),
             macros_per_100g_or_ml=Macros(
-                protein_g=row_dict.get("macros_protein_g_per_100g_or_ml", 0),
-                carbohydrates_g=row_dict.get(
-                    "macros_carbohydrates_g_per_100g_or_ml", 0
-                ),
-                fat_g=row_dict.get("macros_fat_g_per_100g_or_ml", 0),
+                protein=row_dict.get("macros_protein_g_per_100g_or_ml", 0),
+                carbohydrates=row_dict.get("macros_carbohydrates_g_per_100g_or_ml", 0),
+                fat=row_dict.get("macros_fat_g_per_100g_or_ml", 0),
             ),
             tags=tags,
         )
@@ -433,22 +431,21 @@ class ProductRepository:
                 # Handle legacy single shop data
                 shops_data = [shops_data] if shops_data else []
 
-            ingredient_model = Ingredient(
+            return Ingredient(
                 id=ing_row_dict.get("id"),  # type: ignore
                 name=ing_row_dict.get("name"),  # type: ignore
                 photo_data=ing_row_dict.get("photo_data"),
                 shops=shops_data,
                 calories_per_100g_or_ml=ing_row_dict.get("calories_per_100g_or_ml", 0),
                 macros_per_100g_or_ml=Macros(
-                    protein_g=ing_row_dict.get("macros_protein_g_per_100g_or_ml", 0),
-                    carbohydrates_g=ing_row_dict.get(
+                    protein=ing_row_dict.get("macros_protein_g_per_100g_or_ml", 0),
+                    carbohydrates=ing_row_dict.get(
                         "macros_carbohydrates_g_per_100g_or_ml", 0
                     ),
-                    fat_g=ing_row_dict.get("macros_fat_g_per_100g_or_ml", 0),
+                    fat=ing_row_dict.get("macros_fat_g_per_100g_or_ml", 0),
                 ),
                 tags=tags,
             )
-            return Ingredient(ingredient=ingredient_model)
         except SQLAlchemyError as e:
             logger.error(
                 f"DB error in _fetch_ingredient_details_for_product for {ingredient_id}: {e}"
@@ -516,17 +513,15 @@ class ProductRepository:
 
             if product_create.ingredients:
                 sql_insert_pi = text("""
-                    INSERT INTO product_ingredients (product_id, ingredient_id, quantity, unit)
-                    VALUES (:product_id, :ingredient_id, :quantity, :unit)
+                    INSERT INTO product_ingredients (product_id, ingredient_id)
+                    VALUES (:product_id, :ingredient_id)
                 """)
                 for iq in product_create.ingredients:
                     self.session.execute(
                         sql_insert_pi,
                         {
                             "product_id": product_id,
-                            "ingredient_id": iq.ingredient.id,
-                            "quantity": iq.quantity,
-                            "unit": iq.unit.value,
+                            "ingredient_id": iq.id,
                         },
                     )
 
@@ -776,17 +771,15 @@ class ProductRepository:
             self.session.execute(sql_delete_pi, {"product_id": product_update.id})
             if product_update.ingredients:
                 sql_insert_pi = text("""
-                    INSERT INTO product_ingredients (product_id, ingredient_id, quantity, unit)
-                    VALUES (:product_id, :ingredient_id, :quantity, :unit)
+                    INSERT INTO product_ingredients (product_id, ingredient_id)
+                    VALUES (:product_id, :ingredient_id)
                 """)
                 for iq in product_update.ingredients:
                     self.session.execute(
                         sql_insert_pi,
                         {
                             "product_id": product_update.id,
-                            "ingredient_id": iq.ingredient.id,
-                            "quantity": iq.quantity,
-                            "unit": iq.unit.value,
+                            "ingredient_id": iq.id,
                         },
                     )
 
