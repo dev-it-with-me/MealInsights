@@ -13,7 +13,12 @@ class Macros(BaseModel):
     carbohydrates_g: float = Field(
         ..., alias="carbohydrates", ge=0, description="Carbohydrates in grams"
     )
+    sugar_g: float = Field(..., alias="sugar", ge=0, description="Sugar in grams")
     fat_g: float = Field(..., alias="fat", ge=0, description="Fat in grams")
+    fiber_g: float = Field(..., alias="fiber", ge=0, description="Fiber in grams")
+    saturated_fat_g: float = Field(
+        ..., alias="saturated_fat", ge=0, description="Saturated fat in grams"
+    )
 
     model_config = {
         # Forbid unexpected fields and enforce aliases
