@@ -7,7 +7,10 @@ import { DietTagEnum } from '@/shared/lib/types';
 const macrosSchema = z.object({
     protein: z.number().min(0, 'Protein must be non-negative'),
     carbohydrates: z.number().min(0, 'Carbohydrates must be non-negative'),
+    sugar: z.number().min(0, 'Sugar must be non-negative'),
     fat: z.number().min(0, 'Fat must be non-negative'),
+    fiber: z.number().min(0, 'Fiber must be non-negative'),
+    saturated_fat: z.number().min(0, 'Saturated fat must be non-negative'),
 });
 
 // Create enum values array for Zod validation

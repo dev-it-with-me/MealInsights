@@ -45,8 +45,6 @@ const dietTagOptions = Object.values(DietTagEnum).map(tag => ({
   label: tag.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
 }));
 
-type ProductFormData = CreateProductRequest | UpdateProductRequest;
-
 const AddEditProductForm = ({
   isOpen,
   onClose,
@@ -65,12 +63,11 @@ const AddEditProductForm = ({
   const {
     register,
     handleSubmit,
-    watch,
     reset,
     control,
     formState: { errors }
-  } = useForm<ProductFormData>({
-    resolver: zodResolver(schema),
+  } = useForm<CreateProductRequest | UpdateProductRequest>({
+    resolver: zodResolver(schema as any),
     defaultValues: editingMode ? {
       name: product?.name || '',
       brand: product?.brand || '',
@@ -80,7 +77,10 @@ const AddEditProductForm = ({
       macros_per_100g_or_ml: product?.macros_per_100g_or_ml || {
         protein: 0,
         carbohydrates: 0,
-        fat: 0
+        fat: 0,
+        sugar: 0,
+        fiber: 0,
+        saturated_fat: 0
       },
       package_size_g_or_ml: product?.package_size_g_or_ml || 0,
       tags: product?.tags || []
@@ -93,7 +93,10 @@ const AddEditProductForm = ({
       macros_per_100g_or_ml: {
         protein: 0,
         carbohydrates: 0,
-        fat: 0
+        fat: 0,
+        sugar: 0,
+        fiber: 0,
+        saturated_fat: 0
       },
       package_size_g_or_ml: 0,
       tags: []
@@ -111,7 +114,10 @@ const AddEditProductForm = ({
         macros_per_100g_or_ml: product.macros_per_100g_or_ml || {
           protein: 0,
           carbohydrates: 0,
-          fat: 0
+          fat: 0,
+          sugar: 0,
+          fiber: 0,
+          saturated_fat: 0
         },
         package_size_g_or_ml: product.package_size_g_or_ml || 0,
         tags: product.tags
@@ -126,7 +132,10 @@ const AddEditProductForm = ({
         macros_per_100g_or_ml: {
           protein: 0,
           carbohydrates: 0,
-          fat: 0
+          fat: 0,
+          sugar: 0,
+          fiber: 0,
+          saturated_fat: 0
         },
         package_size_g_or_ml: 0,
         tags: []
@@ -134,7 +143,7 @@ const AddEditProductForm = ({
     }
   }, [isOpen, product, editingMode, reset]);
 
-  const handleFormSubmit = async (data: ProductFormData) => {
+  const handleFormSubmit = async (data: CreateProductRequest | UpdateProductRequest) => {
     setIsSubmitting(true);
     try {
       let apiData: CreateProductRequest | UpdateProductRequest;
@@ -332,6 +341,53 @@ const AddEditProductForm = ({
                   step={0.1}
                   {...field}
                   error={errors.macros_per_100g_or_ml?.fat?.message}
+                />
+              )}
+            />
+          </Group>
+
+          <Group grow>
+            <Controller
+              name="macros_per_100g_or_ml.sugar"
+              control={control}
+              render={({ field }) => (
+                <NumberInput
+                  label="Sugar (g)"
+                  placeholder="Enter sugar"
+                  min={0}
+                  step={0.1}
+                  {...field}
+                  error={errors.macros_per_100g_or_ml?.sugar?.message}
+                />
+              )}
+            />
+            
+            <Controller
+              name="macros_per_100g_or_ml.fiber"
+              control={control}
+              render={({ field }) => (
+                <NumberInput
+                  label="Fiber (g)"
+                  placeholder="Enter fiber"
+                  min={0}
+                  step={0.1}
+                  {...field}
+                  error={errors.macros_per_100g_or_ml?.fiber?.message}
+                />
+              )}
+            />
+            
+            <Controller
+              name="macros_per_100g_or_ml.saturated_fat"
+              control={control}
+              render={({ field }) => (
+                <NumberInput
+                  label="Saturated Fat (g)"
+                  placeholder="Enter saturated fat"
+                  min={0}
+                  step={0.1}
+                  {...field}
+                  error={errors.macros_per_100g_or_ml?.saturated_fat?.message}
                 />
               )}
             />

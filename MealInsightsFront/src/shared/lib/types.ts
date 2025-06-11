@@ -5,7 +5,10 @@
 export interface Macros {
     protein: number;
     carbohydrates: number;
+    sugar: number;
     fat: number;
+    fiber: number;
+    saturated_fat: number;
 }
 
 export const DietTagEnum = {

@@ -48,3 +48,10 @@ def get_app_db_url(
 ):
     """Returns the SQLAlchemy URL for the application database."""
     return f"postgresql+psycopg2://{user}:{password}@{host}/{dbname}"
+
+
+def get_database_engine():
+    """Returns a SQLAlchemy Engine for the application database."""
+    from sqlalchemy import create_engine
+
+    return create_engine(APP_DB_URL, echo=True, future=True)

@@ -79,7 +79,10 @@ const AddEditIngredientForm = ({
       macros_per_100g_or_ml: ingredient?.macros_per_100g_or_ml || {
         protein: 0,
         carbohydrates: 0,
-        fat: 0
+        fat: 0,
+        sugar: 0,
+        fiber: 0,
+        saturated_fat: 0
       },
       tags: ingredient?.tags || []
     } : {
@@ -89,7 +92,10 @@ const AddEditIngredientForm = ({
       macros_per_100g_or_ml: {
         protein: 0,
         carbohydrates: 0,
-        fat: 0
+        fat: 0,
+        sugar: 0,
+        fiber: 0,
+        saturated_fat: 0
       },
       tags: []
     }
@@ -115,7 +121,10 @@ const AddEditIngredientForm = ({
         macros_per_100g_or_ml: {
           protein: 0,
           carbohydrates: 0,
-          fat: 0
+          fat: 0,
+          sugar: 0,
+          fiber: 0,
+          saturated_fat: 0
         },
         tags: []
       });
@@ -245,7 +254,7 @@ const AddEditIngredientForm = ({
             )}
           />
 
-          {/* Macros Fields - E3014, E3015, E3016 */}
+          {/* Macros Fields - E3014, E3015, E3016, E3017, E3018, E3019 */}
           <Group grow>
             <Controller
               name="macros_per_100g_or_ml.protein"
@@ -255,6 +264,7 @@ const AddEditIngredientForm = ({
                   label="Protein (g)"
                   placeholder="0"
                   min={0}
+                  step={0.1}
                   error={errors.macros_per_100g_or_ml?.protein?.message}
                   {...field}
                 />
@@ -268,6 +278,7 @@ const AddEditIngredientForm = ({
                   label="Carbohydrates (g)"
                   placeholder="0"
                   min={0}
+                  step={0.1}
                   error={errors.macros_per_100g_or_ml?.carbohydrates?.message}
                   {...field}
                 />
@@ -281,6 +292,7 @@ const AddEditIngredientForm = ({
                   label="Fat (g)"
                   placeholder="0"
                   min={0}
+                  step={0.1}
                   error={errors.macros_per_100g_or_ml?.fat?.message}
                   {...field}
                 />
@@ -288,7 +300,52 @@ const AddEditIngredientForm = ({
             />
           </Group>
 
-          {/* E3017 - TagsField */}
+          <Group grow>
+            <Controller
+              name="macros_per_100g_or_ml.sugar"
+              control={control}
+              render={({ field }) => (
+                <NumberInput
+                  label="Sugar (g)"
+                  placeholder="0"
+                  min={0}
+                  step={0.1}
+                  error={errors.macros_per_100g_or_ml?.sugar?.message}
+                  {...field}
+                />
+              )}
+            />
+            <Controller
+              name="macros_per_100g_or_ml.fiber"
+              control={control}
+              render={({ field }) => (
+                <NumberInput
+                  label="Fiber (g)"
+                  placeholder="0"
+                  min={0}
+                  step={0.1}
+                  error={errors.macros_per_100g_or_ml?.fiber?.message}
+                  {...field}
+                />
+              )}
+            />
+            <Controller
+              name="macros_per_100g_or_ml.saturated_fat"
+              control={control}
+              render={({ field }) => (
+                <NumberInput
+                  label="Saturated Fat (g)"
+                  placeholder="0"
+                  min={0}
+                  step={0.1}
+                  error={errors.macros_per_100g_or_ml?.saturated_fat?.message}
+                  {...field}
+                />
+              )}
+            />
+          </Group>
+
+          {/* E3020 - TagsField */}
           <MultiSelect
             label="Tags"
             placeholder="Select diet tags"
@@ -300,7 +357,7 @@ const AddEditIngredientForm = ({
             clearable
           />
 
-          {/* Action Buttons - E3018, E3019 */}
+          {/* Action Buttons - E3021, E3022 */}
           <Group justify="flex-end" mt="md">
             <Button
               variant="outline"

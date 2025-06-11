@@ -99,6 +99,24 @@ ingredients_table = Table(
     Column(
         "macros_fat_g_per_100g_or_ml", REAL, nullable=False, server_default=text("0")
     ),
+    Column(
+        "macros_sugar_g_per_100g_or_ml",
+        REAL,
+        nullable=False,
+        server_default=text("0"),
+    ),
+    Column(
+        "macros_fiber_g_per_100g_or_ml",
+        REAL,
+        nullable=False,
+        server_default=text("0"),
+    ),
+    Column(
+        "macros_saturated_fat_g_per_100g_or_ml",
+        REAL,
+        nullable=False,
+        server_default=text("0"),
+    ),
     sqlalchemy.CheckConstraint(
         "calories_per_100g_or_ml >= 0", name="ck_ingredients_calories"
     ),
@@ -110,6 +128,16 @@ ingredients_table = Table(
     ),
     sqlalchemy.CheckConstraint(
         "macros_fat_g_per_100g_or_ml >= 0", name="ck_ingredients_fat"
+    ),
+    sqlalchemy.CheckConstraint(
+        "macros_sugar_g_per_100g_or_ml >= 0", name="ck_ingredients_sugar"
+    ),
+    sqlalchemy.CheckConstraint(
+        "macros_fiber_g_per_100g_or_ml >= 0", name="ck_ingredients_fiber"
+    ),
+    sqlalchemy.CheckConstraint(
+        "macros_saturated_fat_g_per_100g_or_ml >= 0",
+        name="ck_ingredients_saturated_fat",
     ),
 )
 
@@ -143,6 +171,9 @@ products_table = Table(
     Column("macros_protein_g_per_100g_or_ml", REAL, nullable=True),
     Column("macros_carbohydrates_g_per_100g_or_ml", REAL, nullable=True),
     Column("macros_fat_g_per_100g_or_ml", REAL, nullable=True),
+    Column("macros_sugar_g_per_100g_or_ml", REAL, nullable=True),
+    Column("macros_fiber_g_per_100g_or_ml", REAL, nullable=True),
+    Column("macros_saturated_fat_g_per_100g_or_ml", REAL, nullable=True),
     Column("package_size_g_or_ml", REAL, nullable=True),
     sqlalchemy.CheckConstraint(
         "calories_per_100g_or_ml IS NULL OR calories_per_100g_or_ml >= 0",
@@ -159,6 +190,18 @@ products_table = Table(
     sqlalchemy.CheckConstraint(
         "macros_fat_g_per_100g_or_ml IS NULL OR macros_fat_g_per_100g_or_ml >= 0",
         name="ck_products_fat",
+    ),
+    sqlalchemy.CheckConstraint(
+        "macros_sugar_g_per_100g_or_ml IS NULL OR macros_sugar_g_per_100g_or_ml >= 0",
+        name="ck_products_sugar",
+    ),
+    sqlalchemy.CheckConstraint(
+        "macros_fiber_g_per_100g_or_ml IS NULL OR macros_fiber_g_per_100g_or_ml >= 0",
+        name="ck_products_fiber",
+    ),
+    sqlalchemy.CheckConstraint(
+        "macros_saturated_fat_g_per_100g_or_ml IS NULL OR macros_saturated_fat_g_per_100g_or_ml >= 0",
+        name="ck_products_saturated_fat",
     ),
     sqlalchemy.CheckConstraint(
         "package_size_g_or_ml IS NULL OR package_size_g_or_ml >= 0",

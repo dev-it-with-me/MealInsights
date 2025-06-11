@@ -15,7 +15,7 @@ from sqlalchemy.engine import CursorResult
 
 from app.enums import DietTagEnum, UnitEnum
 from app.models import Macros  # Assuming Macros is a Pydantic model
-from .models import Ingredient, Product, Ingredient  # Pydantic models
+from .models import Ingredient, Product  # Pydantic models
 from .exceptions import (
     DatabaseError,
     IngredientNotFoundError,
@@ -65,7 +65,10 @@ class IngredientRepository:
             macros_per_100g_or_ml=Macros(
                 protein=row_dict.get("macros_protein_g_per_100g_or_ml", 0),
                 carbohydrates=row_dict.get("macros_carbohydrates_g_per_100g_or_ml", 0),
+                sugar=row_dict.get("macros_sugar_g_per_100g_or_ml", 0),
                 fat=row_dict.get("macros_fat_g_per_100g_or_ml", 0),
+                fiber=row_dict.get("macros_fiber_g_per_100g_or_ml", 0),
+                saturated_fat=row_dict.get("macros_saturated_fat_g_per_100g_or_ml", 0),
             ),
             tags=tags,
         )
@@ -84,10 +87,13 @@ class IngredientRepository:
                     calories_per_100g_or_ml,
                     macros_protein_g_per_100g_or_ml,
                     macros_carbohydrates_g_per_100g_or_ml,
-                    macros_fat_g_per_100g_or_ml
+                    macros_sugar_g_per_100g_or_ml,
+                    macros_fat_g_per_100g_or_ml,
+                    macros_fiber_g_per_100g_or_ml,
+                    macros_saturated_fat_g_per_100g_or_ml
                 ) VALUES (
                     :id, :name, :photo_data, :shops,
-                    :calories, :protein, :carbs, :fat
+                    :calories, :protein, :carbs, :sugar, :fat, :fiber, :saturated_fat
                 )
                 RETURNING id; 
             """)  # RETURNING id might not be needed if id is pre-generated and passed
@@ -100,7 +106,10 @@ class IngredientRepository:
                 "calories": ingredient_create.calories_per_100g_or_ml,
                 "protein": ingredient_create.macros_per_100g_or_ml.protein_g,
                 "carbs": ingredient_create.macros_per_100g_or_ml.carbohydrates_g,
+                "sugar": ingredient_create.macros_per_100g_or_ml.sugar_g,
                 "fat": ingredient_create.macros_per_100g_or_ml.fat_g,
+                "fiber": ingredient_create.macros_per_100g_or_ml.fiber_g,
+                "saturated_fat": ingredient_create.macros_per_100g_or_ml.saturated_fat_g,
             }
 
             # Execute and get the ID (if RETURNING is used and id wasn't pre-set)
@@ -183,7 +192,8 @@ class IngredientRepository:
             # Base query - select specific columns to avoid JSON DISTINCT issues
             base_sql = """SELECT i.id, i.name, i.photo_data, i.shops, i.calories_per_100g_or_ml,
                          i.macros_protein_g_per_100g_or_ml, i.macros_carbohydrates_g_per_100g_or_ml,
-                         i.macros_fat_g_per_100g_or_ml FROM ingredients i"""
+                         i.macros_sugar_g_per_100g_or_ml, i.macros_fat_g_per_100g_or_ml,
+                         i.macros_fiber_g_per_100g_or_ml, i.macros_saturated_fat_g_per_100g_or_ml FROM ingredients i"""
             conditions: List[str] = []
             joins: List[str] = []
 
@@ -276,7 +286,10 @@ class IngredientRepository:
                     calories_per_100g_or_ml = :calories,
                     macros_protein_g_per_100g_or_ml = :protein,
                     macros_carbohydrates_g_per_100g_or_ml = :carbs,
-                    macros_fat_g_per_100g_or_ml = :fat
+                    macros_sugar_g_per_100g_or_ml = :sugar,
+                    macros_fat_g_per_100g_or_ml = :fat,
+                    macros_fiber_g_per_100g_or_ml = :fiber,
+                    macros_saturated_fat_g_per_100g_or_ml = :saturated_fat
                 WHERE id = :id
             """)
             params = {
@@ -287,7 +300,10 @@ class IngredientRepository:
                 "calories": ingredient_update.calories_per_100g_or_ml,
                 "protein": ingredient_update.macros_per_100g_or_ml.protein_g,
                 "carbs": ingredient_update.macros_per_100g_or_ml.carbohydrates_g,
+                "sugar": ingredient_update.macros_per_100g_or_ml.sugar_g,
                 "fat": ingredient_update.macros_per_100g_or_ml.fat_g,
+                "fiber": ingredient_update.macros_per_100g_or_ml.fiber_g,
+                "saturated_fat": ingredient_update.macros_per_100g_or_ml.saturated_fat_g,
             }
             self.session.execute(sql_update_ingredient, params)
 
@@ -382,9 +398,12 @@ class ProductRepository:
             and row_dict.get("macros_fat_g_per_100g_or_ml") is not None
         ):
             macros = Macros(
-                protein_g=row_dict.get("macros_protein_g_per_100g_or_ml"),  # type: ignore
-                carbohydrates_g=row_dict.get("macros_carbohydrates_g_per_100g_or_ml"),  # type: ignore
-                fat_g=row_dict.get("macros_fat_g_per_100g_or_ml"),  # type: ignore
+                protein=row_dict.get("macros_protein_g_per_100g_or_ml"),  # type: ignore
+                carbohydrates=row_dict.get("macros_carbohydrates_g_per_100g_or_ml"),  # type: ignore
+                sugar=row_dict.get("macros_sugar_g_per_100g_or_ml", 0),
+                fat=row_dict.get("macros_fat_g_per_100g_or_ml"),  # type: ignore
+                fiber=row_dict.get("macros_fiber_g_per_100g_or_ml", 0),
+                saturated_fat=row_dict.get("macros_saturated_fat_g_per_100g_or_ml", 0),
             )
 
         return Product(
@@ -442,7 +461,12 @@ class ProductRepository:
                     carbohydrates=ing_row_dict.get(
                         "macros_carbohydrates_g_per_100g_or_ml", 0
                     ),
+                    sugar=ing_row_dict.get("macros_sugar_g_per_100g_or_ml", 0),
                     fat=ing_row_dict.get("macros_fat_g_per_100g_or_ml", 0),
+                    fiber=ing_row_dict.get("macros_fiber_g_per_100g_or_ml", 0),
+                    saturated_fat=ing_row_dict.get(
+                        "macros_saturated_fat_g_per_100g_or_ml", 0
+                    ),
                 ),
                 tags=tags,
             )
@@ -474,11 +498,14 @@ class ProductRepository:
                     calories_per_100g_or_ml,
                     macros_protein_g_per_100g_or_ml,
                     macros_carbohydrates_g_per_100g_or_ml,
+                    macros_sugar_g_per_100g_or_ml,
                     macros_fat_g_per_100g_or_ml,
+                    macros_fiber_g_per_100g_or_ml,
+                    macros_saturated_fat_g_per_100g_or_ml,
                     package_size_g_or_ml
                 ) VALUES (
                     :id, :name, :brand, :photo_data, :shop, :barcode,
-                    :calories, :protein, :carbs, :fat, :package_size
+                    :calories, :protein, :carbs, :sugar, :fat, :fiber, :saturated_fat, :package_size
                 )
             """)
             params = {
@@ -495,7 +522,16 @@ class ProductRepository:
                 "carbs": product_create.macros_per_100g_or_ml.carbohydrates_g
                 if product_create.macros_per_100g_or_ml
                 else None,
+                "sugar": product_create.macros_per_100g_or_ml.sugar_g
+                if product_create.macros_per_100g_or_ml
+                else None,
                 "fat": product_create.macros_per_100g_or_ml.fat_g
+                if product_create.macros_per_100g_or_ml
+                else None,
+                "fiber": product_create.macros_per_100g_or_ml.fiber_g
+                if product_create.macros_per_100g_or_ml
+                else None,
+                "saturated_fat": product_create.macros_per_100g_or_ml.saturated_fat_g
                 if product_create.macros_per_100g_or_ml
                 else None,
                 "package_size": product_create.package_size_g_or_ml,
@@ -724,7 +760,10 @@ class ProductRepository:
                     barcode = :barcode, calories_per_100g_or_ml = :calories,
                     macros_protein_g_per_100g_or_ml = :protein,
                     macros_carbohydrates_g_per_100g_or_ml = :carbs,
+                    macros_sugar_g_per_100g_or_ml = :sugar,
                     macros_fat_g_per_100g_or_ml = :fat,
+                    macros_fiber_g_per_100g_or_ml = :fiber,
+                    macros_saturated_fat_g_per_100g_or_ml = :saturated_fat,
                     package_size_g_or_ml = :package_size
                 WHERE id = :id
             """)
@@ -742,7 +781,16 @@ class ProductRepository:
                 "carbs": product_update.macros_per_100g_or_ml.carbohydrates_g
                 if product_update.macros_per_100g_or_ml
                 else None,
+                "sugar": product_update.macros_per_100g_or_ml.sugar_g
+                if product_update.macros_per_100g_or_ml
+                else None,
                 "fat": product_update.macros_per_100g_or_ml.fat_g
+                if product_update.macros_per_100g_or_ml
+                else None,
+                "fiber": product_update.macros_per_100g_or_ml.fiber_g
+                if product_update.macros_per_100g_or_ml
+                else None,
+                "saturated_fat": product_update.macros_per_100g_or_ml.saturated_fat_g
                 if product_update.macros_per_100g_or_ml
                 else None,
                 "package_size": product_update.package_size_g_or_ml,
