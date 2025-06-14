@@ -6,7 +6,7 @@ Handles all database operations for the ingredients_and_products module using ra
 import uuid
 import logging
 import json
-from typing import List, Any
+from typing import Any
 
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
@@ -42,7 +42,7 @@ class IngredientRepository:
         self.session = session
 
     def _map_row_to_ingredient(
-        self, row_dict: None | dict[str, Any], tags: List[DietTagEnum]
+        self, row_dict: None | dict[str, Any], tags: list[DietTagEnum]
     ) -> None | Ingredient:
         """Converts a database row dictionary to an Ingredient Pydantic model."""
         if not row_dict:
@@ -183,8 +183,8 @@ class IngredientRepository:
         limit: int = 100,
         name_filter: None | str = None,
         shop_filter: None | str = None,
-        tag_filter: None | List[DietTagEnum] = None,
-    ) -> List[Ingredient]:
+        tag_filter: None | list[DietTagEnum] = None,
+    ) -> list[Ingredient]:
         """Retrieves ingredients with filtering and pagination using raw SQL."""
         try:
             params: dict[str, Any] = {"limit": limit, "offset": skip}
@@ -194,8 +194,8 @@ class IngredientRepository:
                          i.macros_protein_g_per_100g_or_ml, i.macros_carbohydrates_g_per_100g_or_ml,
                          i.macros_sugar_g_per_100g_or_ml, i.macros_fat_g_per_100g_or_ml,
                          i.macros_fiber_g_per_100g_or_ml, i.macros_saturated_fat_g_per_100g_or_ml FROM ingredients i"""
-            conditions: List[str] = []
-            joins: List[str] = []
+            conditions: list[str] = []
+            joins: list[str] = []
 
             if name_filter:
                 conditions.append("i.name ILIKE :name_filter")
@@ -369,7 +369,7 @@ class IngredientRepository:
             logger.error(f"Database error deleting ingredient {ingredient_id}: {e}")
             raise DatabaseError("ingredient deletion", str(e))
 
-    def search_by_name(self, name_pattern: str, limit: int = 10) -> List[Ingredient]:
+    def search_by_name(self, name_pattern: str, limit: int = 10) -> list[Ingredient]:
         """Searches ingredients by name pattern using raw SQL."""
         return self.get_all(limit=limit, name_filter=name_pattern)
 
@@ -384,8 +384,8 @@ class ProductRepository:
     def _map_row_to_product(
         self,
         row_dict: None | dict[str, Any],
-        tags: List[DietTagEnum],
-        product_ingredients: List[Ingredient],
+        tags: list[DietTagEnum],
+        product_ingredients: list[Ingredient],
     ) -> None | Product:
         """Converts a database row dictionary to a Product Pydantic model."""
         if not row_dict:
@@ -412,7 +412,6 @@ class ProductRepository:
             brand=row_dict.get("brand"),
             photo_data=row_dict.get("photo_data"),
             shop=row_dict.get("shop"),
-            barcode=row_dict.get("barcode"),
             calories_per_100g_or_ml=row_dict.get("calories_per_100g_or_ml"),
             macros_per_100g_or_ml=macros,
             package_size_g_or_ml=row_dict.get("package_size_g_or_ml"),
@@ -481,20 +480,9 @@ class ProductRepository:
         try:
             product_id = product_create.id or uuid.uuid4()
 
-            if product_create.barcode:
-                sql_check_barcode = text(
-                    "SELECT id FROM products WHERE barcode = :barcode"
-                )
-                if self.session.execute(
-                    sql_check_barcode, {"barcode": product_create.barcode}
-                ).first():
-                    raise DuplicateProductError(
-                        f"Product with barcode '{product_create.barcode}' already exists."
-                    )
-
             sql_insert_product = text("""
                 INSERT INTO products (
-                    id, name, brand, photo_data, shop, barcode,
+                    id, name, brand, photo_data, shop,
                     calories_per_100g_or_ml,
                     macros_protein_g_per_100g_or_ml,
                     macros_carbohydrates_g_per_100g_or_ml,
@@ -514,7 +502,6 @@ class ProductRepository:
                 "brand": product_create.brand,
                 "photo_data": product_create.photo_data,
                 "shop": product_create.shop,
-                "barcode": product_create.barcode,
                 "calories": product_create.calories_per_100g_or_ml,
                 "protein": product_create.macros_per_100g_or_ml.protein_g
                 if product_create.macros_per_100g_or_ml
@@ -569,10 +556,6 @@ class ProductRepository:
         except IntegrityError as e:
             self.session.rollback()
             logger.error(f"Database integrity error creating product: {e}")
-            if product_create.barcode and "barcode" in str(e).lower():  # Basic check
-                raise DuplicateProductError(
-                    f"Product with barcode '{product_create.barcode}' failed (integrity error)."
-                )
             raise DatabaseError(
                 "Product creation failed due to integrity constraint.", str(e)
             )
@@ -603,7 +586,7 @@ class ProductRepository:
             tags = [DietTagEnum(tag_row[0]) for tag_row in tag_results]
 
             # Fetch product ingredients
-            product_ingredients_list: List[Ingredient] = []
+            product_ingredients_list: list[Ingredient] = []
             sql_pi = text("""
                 SELECT ingredient_id, quantity, unit 
                 FROM product_ingredients 
@@ -640,14 +623,14 @@ class ProductRepository:
         name_filter: None | str = None,
         brand_filter: None | str = None,
         shop_filter: None | str = None,
-        tag_filter: None | List[DietTagEnum] = None,
-    ) -> List[Product]:
+        tag_filter: None | list[DietTagEnum] = None,
+    ) -> list[Product]:
         """Retrieves products with filtering. Ingredients not fetched for list view performance."""
         try:
             params: dict[str, Any] = {"limit": limit, "offset": skip}
             base_sql = "SELECT DISTINCT p.* FROM products p"
-            conditions: List[str] = []
-            joins: List[str] = []
+            conditions: list[str] = []
+            joins: list[str] = []
 
             if name_filter:
                 conditions.append("p.name ILIKE :name_filter")
@@ -735,25 +718,6 @@ class ProductRepository:
                     f"Product with ID {product_update.id} not found for update."
                 )
 
-            # Check for barcode conflict if barcode is being changed
-            if (
-                product_update.barcode
-                and product_update.barcode != current_product.barcode
-            ):
-                sql_check_barcode = text(
-                    "SELECT id FROM products WHERE barcode = :barcode AND id != :current_id"
-                )
-                if self.session.execute(
-                    sql_check_barcode,
-                    {
-                        "barcode": product_update.barcode,
-                        "current_id": product_update.id,
-                    },
-                ).first():
-                    raise DuplicateProductError(
-                        f"Another product with barcode '{product_update.barcode}' already exists."
-                    )
-
             sql_update_product = text("""
                 UPDATE products SET
                     name = :name, brand = :brand, photo_data = :photo_data, shop = :shop,
@@ -773,7 +737,6 @@ class ProductRepository:
                 "brand": product_update.brand,
                 "photo_data": product_update.photo_data,
                 "shop": product_update.shop,
-                "barcode": product_update.barcode,
                 "calories": product_update.calories_per_100g_or_ml,
                 "protein": product_update.macros_per_100g_or_ml.protein_g
                 if product_update.macros_per_100g_or_ml
@@ -838,10 +801,6 @@ class ProductRepository:
             logger.error(
                 f"DB integrity error updating product {product_update.id}: {e}"
             )
-            if product_update.barcode and "barcode" in str(e).lower():
-                raise DuplicateProductError(
-                    f"Product barcode '{product_update.barcode}' conflict (integrity error)."
-                )
             raise DatabaseError(
                 "Product update failed due to integrity constraint.", str(e)
             )
@@ -878,6 +837,6 @@ class ProductRepository:
                 )
             raise DatabaseError("product deletion", str(e))
 
-    def search_by_name(self, name_pattern: str, limit: int = 10) -> List[Product]:
+    def search_by_name(self, name_pattern: str, limit: int = 10) -> list[Product]:
         """Searches products by name pattern using raw SQL. Ingredients not loaded."""
         return self.get_all(limit=limit, name_filter=name_pattern)

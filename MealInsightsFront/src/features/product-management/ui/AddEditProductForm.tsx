@@ -72,7 +72,6 @@ const AddEditProductForm = ({
       name: product?.name || '',
       brand: product?.brand || '',
       shop: product?.shop || '',
-      barcode: product?.barcode || '',
       calories_per_100g_or_ml: product?.calories_per_100g_or_ml || 0,
       macros_per_100g_or_ml: product?.macros_per_100g_or_ml || {
         protein: 0,
@@ -88,7 +87,6 @@ const AddEditProductForm = ({
       name: '',
       brand: '',
       shop: '',
-      barcode: '',
       calories_per_100g_or_ml: 0,
       macros_per_100g_or_ml: {
         protein: 0,
@@ -109,7 +107,6 @@ const AddEditProductForm = ({
         name: product.name,
         brand: product.brand || '',
         shop: product.shop || '',
-        barcode: product.barcode || '',
         calories_per_100g_or_ml: product.calories_per_100g_or_ml || 0,
         macros_per_100g_or_ml: product.macros_per_100g_or_ml || {
           protein: 0,
@@ -127,7 +124,6 @@ const AddEditProductForm = ({
         name: '',
         brand: '',
         shop: '',
-        barcode: '',
         calories_per_100g_or_ml: 0,
         macros_per_100g_or_ml: {
           protein: 0,
@@ -153,7 +149,6 @@ const AddEditProductForm = ({
           name: data.name,
           brand: data.brand || null,
           shop: data.shop || null,
-          barcode: data.barcode || null,
           calories_per_100g_or_ml: data.calories_per_100g_or_ml || null,
           macros_per_100g_or_ml: data.macros_per_100g_or_ml || null,
           package_size_g_or_ml: data.package_size_g_or_ml || null,
@@ -164,7 +159,6 @@ const AddEditProductForm = ({
           name: data.name!,
           brand: data.brand || null,
           shop: data.shop || null,
-          barcode: data.barcode || null,
           calories_per_100g_or_ml: data.calories_per_100g_or_ml || null,
           macros_per_100g_or_ml: data.macros_per_100g_or_ml || null,
           package_size_g_or_ml: data.package_size_g_or_ml || null,
@@ -249,13 +243,6 @@ const AddEditProductForm = ({
           </Group>
 
           <Group grow>
-            <TextInput
-              label="Barcode"
-              placeholder="Enter barcode"
-              {...register('barcode')}
-              error={errors.barcode?.message}
-            />
-            
             <Controller
               name="package_size_g_or_ml"
               control={control}

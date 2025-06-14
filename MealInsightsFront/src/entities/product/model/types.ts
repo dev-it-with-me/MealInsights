@@ -16,7 +16,6 @@ export interface Product {
     photo_data?: Uint8Array | null;
     photo_url?: string | null;
     shop?: string | null;
-    barcode?: string | null;
     calories_per_100g_or_ml?: number | null;
     macros_per_100g_or_ml?: Macros | null;
     package_size_g_or_ml?: number | null;
@@ -31,7 +30,6 @@ export interface CreateProductRequest {
     brand?: string | null;
     photo_data?: Uint8Array | null;
     shop?: string | null;
-    barcode?: string | null;
     calories_per_100g_or_ml?: number | null;
     macros_per_100g_or_ml?: Macros | null;
     package_size_g_or_ml?: number | null;
@@ -44,7 +42,6 @@ export interface UpdateProductRequest {
     brand?: string | null;
     photo_data?: Uint8Array | null;
     shop?: string | null;
-    barcode?: string | null;
     calories_per_100g_or_ml?: number | null;
     macros_per_100g_or_ml?: Macros | null;
     package_size_g_or_ml?: number | null;

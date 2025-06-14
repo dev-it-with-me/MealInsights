@@ -56,11 +56,6 @@ class Product(BaseModel):
     shop: str | None = Field(
         default=None, max_length=100, description="Shop where the product was bought"
     )
-    barcode: str | None = Field(
-        default=None,
-        max_length=50,
-        description="Barcode of the product (e.g., EAN, UPC)",
-    )
 
     # Nutritional information can be per 100g/ml or per serving/package
     calories_per_100g_or_ml: float | None = Field(

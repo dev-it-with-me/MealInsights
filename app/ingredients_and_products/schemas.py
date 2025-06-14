@@ -123,11 +123,6 @@ class ProductCreateSchema(BaseModel):
     shop: None | str = Field(
         default=None, max_length=100, description="Shop where the product was bought"
     )
-    barcode: None | str = Field(
-        default=None,
-        max_length=50,
-        description="Barcode of the product (e.g., EAN, UPC)",
-    )
     calories_per_100g_or_ml: None | float = Field(
         default=None, ge=0, description="Calories per 100g or 100ml"
     )
@@ -165,11 +160,6 @@ class ProductUpdateSchema(BaseModel):
     )
     shop: None | str = Field(
         default=None, max_length=100, description="Shop where the product was bought"
-    )
-    barcode: None | str = Field(
-        default=None,
-        max_length=50,
-        description="Barcode of the product (e.g., EAN, UPC)",
     )
     calories_per_100g_or_ml: None | float = Field(
         default=None, ge=0, description="Calories per 100g or 100ml"

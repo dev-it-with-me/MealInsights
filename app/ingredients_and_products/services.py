@@ -293,7 +293,6 @@ class ProductService:
         brand: None | str = None,
         photo_data: None | bytes = None,
         shop: None | str = None,
-        barcode: None | str = None,
         calories_per_100g_or_ml: None | float = None,
         macros_per_100g_or_ml: None | Macros = None,
         package_size_g_or_ml: None | float = None,
@@ -356,7 +355,6 @@ class ProductService:
             brand=brand.strip() if brand else None,
             photo_data=photo_data,
             shop=shop.strip() if shop else None,
-            barcode=barcode.strip() if barcode else None,
             calories_per_100g_or_ml=calories_per_100g_or_ml,
             macros_per_100g_or_ml=macros_per_100g_or_ml,
             package_size_g_or_ml=package_size_g_or_ml,
@@ -441,7 +439,6 @@ class ProductService:
         brand: None | str = None,
         photo_data: None | bytes = None,
         shop: None | str = None,
-        barcode: None | str = None,
         calories_per_100g_or_ml: None | float = None,
         macros_per_100g_or_ml: None | Macros = None,
         package_size_g_or_ml: None | float = None,
@@ -522,7 +519,6 @@ class ProductService:
             brand=brand.strip() if brand is not None else existing.brand,
             photo_data=photo_data if photo_data is not None else existing.photo_data,
             shop=shop.strip() if shop is not None else existing.shop,
-            barcode=barcode.strip() if barcode is not None else existing.barcode,
             calories_per_100g_or_ml=(
                 calories_per_100g_or_ml
                 if calories_per_100g_or_ml is not None
