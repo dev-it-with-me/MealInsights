@@ -26,6 +26,7 @@ export const ingredientCreateSchema = z.object({
         .min(0, 'Calories must be non-negative'),
     macros_per_100g_or_ml: macrosSchema,
     tags: z.array(z.enum(dietTagValues)).default([]),
+    photo_data: z.instanceof(File).nullable().optional(),
 });
 
 export const ingredientUpdateSchema = z.object({
@@ -40,6 +41,7 @@ export const ingredientUpdateSchema = z.object({
         .optional(),
     macros_per_100g_or_ml: macrosSchema.optional(),
     tags: z.array(z.enum(dietTagValues)).optional(),
+    photo_data: z.instanceof(File).nullable().optional(),
 });
 
 export const ingredientFilterSchema = z.object({

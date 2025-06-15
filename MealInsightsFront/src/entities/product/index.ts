@@ -10,7 +10,6 @@ export type {
     ProductsListResponse,
     ProductFilters,
     ProductSearchParams,
-    IngredientQuantity,
     ApiResponse
 } from './model/types';
 
@@ -22,7 +21,6 @@ export {
     productFiltersSchema,
     productSearchParamsSchema,
     productsListResponseSchema,
-    ingredientQuantitySchema
 } from './model/schemas';
 
 // API

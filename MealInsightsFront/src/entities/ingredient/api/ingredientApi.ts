@@ -5,6 +5,7 @@ import { apiClient } from '@/shared/api/client';
 import type {
     Ingredient,
     CreateIngredientRequest,
+    CreateIngredientWithPhotoRequest,
     UpdateIngredientRequest,
     IngredientsListResponse,
     IngredientSearchParams,
@@ -108,5 +109,56 @@ export const ingredientApi = {
         return apiClient.get<Ingredient[]>(`${INGREDIENTS_API_BASE}/by-tags`, {
             tags: tags.join(','),
         });
+    },
+
+    /**
+     * Create new ingredient with photo upload
+     */
+    async createIngredientWithPhoto(data: CreateIngredientWithPhotoRequest): Promise<Ingredient> {
+        const formData = new FormData();
+
+        formData.append('name', data.name);
+        formData.append('shops', JSON.stringify(data.shops || []));
+        formData.append('calories_per_100g_or_ml', data.calories_per_100g_or_ml.toString());
+        formData.append('macros_protein', data.macros_per_100g_or_ml.protein.toString());
+        formData.append('macros_carbohydrates', data.macros_per_100g_or_ml.carbohydrates.toString());
+        formData.append('macros_fat', data.macros_per_100g_or_ml.fat.toString());
+        formData.append('macros_sugar', data.macros_per_100g_or_ml.sugar.toString());
+        formData.append('macros_fiber', data.macros_per_100g_or_ml.fiber.toString());
+        formData.append('macros_saturated_fat', data.macros_per_100g_or_ml.saturated_fat.toString());
+        formData.append('tags', JSON.stringify(data.tags || []));
+
+
+        if (data.photo_data) {
+            formData.append('photo', data.photo_data);
+
+        } else {
+
+        }
+        return apiClient.postFormData<Ingredient>(`${INGREDIENTS_API_BASE}/with-photo`, formData);
+    },
+
+    /**
+     * Update existing ingredient with photo upload
+     */
+    async updateIngredientWithPhoto(id: string, data: CreateIngredientWithPhotoRequest): Promise<Ingredient> {
+        const formData = new FormData();
+
+        formData.append('name', data.name);
+        formData.append('shops', JSON.stringify(data.shops || []));
+        formData.append('calories_per_100g_or_ml', data.calories_per_100g_or_ml.toString());
+        formData.append('macros_protein', data.macros_per_100g_or_ml.protein.toString());
+        formData.append('macros_carbohydrates', data.macros_per_100g_or_ml.carbohydrates.toString());
+        formData.append('macros_fat', data.macros_per_100g_or_ml.fat.toString());
+        formData.append('macros_sugar', data.macros_per_100g_or_ml.sugar.toString());
+        formData.append('macros_fiber', data.macros_per_100g_or_ml.fiber.toString());
+        formData.append('macros_saturated_fat', data.macros_per_100g_or_ml.saturated_fat.toString());
+        formData.append('tags', JSON.stringify(data.tags || []));
+
+        if (data.photo_data) {
+            formData.append('photo', data.photo_data);
+        }
+
+        return apiClient.putFormData<Ingredient>(`${INGREDIENTS_API_BASE}/${id}/with-photo`, formData);
     },
 };

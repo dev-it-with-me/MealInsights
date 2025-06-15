@@ -251,12 +251,21 @@ async def update_ingredient(
         logger.info(f"Updating ingredient: {ingredient_id}")
 
         ingredient_service = get_ingredient_service(db)
+
+        existing_ingredient = ingredient_service.get_ingredient_by_id(ingredient_id)
+
+        if ingredient_data.photo_data and existing_ingredient:
+            photo_data_to_pass = existing_ingredient.photo_data
+        else:
+            photo_data_to_pass = None
+
+        ingredient_service = get_ingredient_service(db)
         ingredient = ingredient_service.update_ingredient(
             ingredient_id=ingredient_id,
             name=ingredient_data.name,
             calories_per_100g_or_ml=ingredient_data.calories_per_100g_or_ml,
             macros_per_100g_or_ml=ingredient_data.macros_per_100g_or_ml,
-            photo_data=ingredient_data.photo_data,
+            photo_data=photo_data_to_pass,
             shops=ingredient_data.shops,
             tags=ingredient_data.tags,
         )
@@ -438,12 +447,10 @@ async def update_product(
 
         product_service = get_product_service(db)
 
-        # Check if this is a photo removal request by looking at the model_dump
-        model_dict = product_data.model_dump(exclude_unset=True)
-        should_update_photo = "photo_data" in model_dict
+        existing_product = product_service.get_product_by_id(product_id)
 
-        if should_update_photo:
-            photo_data_to_pass = product_data.photo_data
+        if product_data.photo_data and existing_product:
+            photo_data_to_pass = existing_product.photo_data
         else:
             photo_data_to_pass = None
 

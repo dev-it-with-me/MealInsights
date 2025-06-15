@@ -5,6 +5,7 @@ import { apiClient } from '@/shared/api/client';
 import type {
     Product,
     CreateProductRequest,
+    CreateProductWithPhotoRequest,
     UpdateProductRequest,
     ProductsListResponse,
     ProductSearchParams,
@@ -116,4 +117,87 @@ export const productApi = {
     async deleteProductPhoto(id: string): Promise<Product> {
         return apiClient.delete<Product>(`${PRODUCTS_API_BASE}/${id}/photo`);
     },
+
+    /**
+     * Create new product with photo upload
+     */
+    async createProductWithPhoto(data: CreateProductWithPhotoRequest): Promise<Product> {
+        const formData = new FormData();
+
+        formData.append('name', data.name);
+        formData.append('brand', data.brand || '');
+        formData.append('shop', data.shop || '');
+        formData.append('calories_per_100g_or_ml', (data.calories_per_100g_or_ml || 0).toString());
+
+        if (data.macros_per_100g_or_ml) {
+            formData.append('macros_protein', data.macros_per_100g_or_ml.protein.toString());
+            formData.append('macros_carbohydrates', data.macros_per_100g_or_ml.carbohydrates.toString());
+            formData.append('macros_fat', data.macros_per_100g_or_ml.fat.toString());
+            formData.append('macros_sugar', data.macros_per_100g_or_ml.sugar.toString());
+            formData.append('macros_fiber', data.macros_per_100g_or_ml.fiber.toString());
+            formData.append('macros_saturated_fat', data.macros_per_100g_or_ml.saturated_fat.toString());
+        } else {
+            formData.append('macros_protein', '0');
+            formData.append('macros_carbohydrates', '0');
+            formData.append('macros_fat', '0');
+            formData.append('macros_sugar', '0');
+            formData.append('macros_fiber', '0');
+            formData.append('macros_saturated_fat', '0');
+        }
+
+        formData.append('package_size_g_or_ml', (data.package_size_g_or_ml || 0).toString());
+        formData.append('ingredients', JSON.stringify(data.ingredients || []));
+        formData.append('tags', JSON.stringify(data.tags || []));
+
+        if (data.photo_data) {
+            formData.append('photo', data.photo_data);
+        }
+
+        return apiClient.postFormData<Product>(`${PRODUCTS_API_BASE}/with-photo`, formData);
+    },
+
+    /**
+     * Update existing product with photo upload
+     */
+    async updateProductWithPhoto(id: string, data: CreateProductWithPhotoRequest): Promise<Product> {
+        const formData = new FormData();
+
+        // Append all fields from CreateProductWithPhotoRequest, similar to createProductWithPhoto
+        // Backend should handle partial updates if fields are optional in the DTO
+        formData.append('name', data.name);
+        if (data.brand !== undefined) formData.append('brand', data.brand || '');
+        if (data.shop !== undefined) formData.append('shop', data.shop || '');
+        if (data.calories_per_100g_or_ml !== undefined) {
+            formData.append('calories_per_100g_or_ml', (data.calories_per_100g_or_ml || 0).toString());
+        }
+
+        if (data.macros_per_100g_or_ml) {
+            formData.append('macros_protein', data.macros_per_100g_or_ml.protein.toString());
+            formData.append('macros_carbohydrates', data.macros_per_100g_or_ml.carbohydrates.toString());
+            formData.append('macros_fat', data.macros_per_100g_or_ml.fat.toString());
+            formData.append('macros_sugar', data.macros_per_100g_or_ml.sugar.toString());
+            formData.append('macros_fiber', data.macros_per_100g_or_ml.fiber.toString());
+            formData.append('macros_saturated_fat', data.macros_per_100g_or_ml.saturated_fat.toString());
+        } else if (data.macros_per_100g_or_ml === null) { // Explicitly nullify if needed by backend
+            formData.append('macros_protein', '0'); // Or however backend expects nullification
+            formData.append('macros_carbohydrates', '0');
+            formData.append('macros_fat', '0');
+            formData.append('macros_sugar', '0');
+            formData.append('macros_fiber', '0');
+            formData.append('macros_saturated_fat', '0');
+        }
+
+        if (data.package_size_g_or_ml !== undefined) {
+            formData.append('package_size_g_or_ml', (data.package_size_g_or_ml || 0).toString());
+        }
+        if (data.ingredients !== undefined) formData.append('ingredients', JSON.stringify(data.ingredients || []));
+        if (data.tags !== undefined) formData.append('tags', JSON.stringify(data.tags || []));
+
+        if (data.photo_data) {
+            formData.append('photo', data.photo_data);
+        }
+
+        // Assuming the endpoint is PUT /products/{id}/with-photo
+        return apiClient.putFormData<Product>(`${PRODUCTS_API_BASE}/${id}/with-photo`, formData);
+    }
 };

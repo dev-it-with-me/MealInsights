@@ -3,23 +3,17 @@
  */
 import type { DietTag, Macros } from '@/shared/lib/types';
 
-export interface IngredientQuantity {
-    ingredient_id: string;
-    quantity: number;
-    unit: string;
-}
-
 export interface Product {
     id: string;
     name: string;
     brand?: string | null;
-    photo_data?: Uint8Array | null;
+    photo_data?: string | null; // Base64 encoded string from API
     photo_url?: string | null;
     shop?: string | null;
     calories_per_100g_or_ml?: number | null;
     macros_per_100g_or_ml?: Macros | null;
     package_size_g_or_ml?: number | null;
-    ingredients?: IngredientQuantity[] | null;
+    ingredients?: string[] | null; // Array of ingredient IDs
     tags: DietTag[];
     created_at: string;
     updated_at: string;
@@ -28,24 +22,24 @@ export interface Product {
 export interface CreateProductRequest {
     name: string;
     brand?: string | null;
-    photo_data?: Uint8Array | null;
+    photo_data?: string | null; // Base64 encoded string for API
     shop?: string | null;
     calories_per_100g_or_ml?: number | null;
     macros_per_100g_or_ml?: Macros | null;
     package_size_g_or_ml?: number | null;
-    ingredients?: IngredientQuantity[] | null;
+    ingredients?: string[] | null; // Array of ingredient IDs
     tags: DietTag[];
 }
 
 export interface UpdateProductRequest {
     name?: string;
     brand?: string | null;
-    photo_data?: Uint8Array | null;
+    photo_data?: string | null; // Base64 encoded string for API
     shop?: string | null;
     calories_per_100g_or_ml?: number | null;
     macros_per_100g_or_ml?: Macros | null;
     package_size_g_or_ml?: number | null;
-    ingredients?: IngredientQuantity[] | null;
+    ingredients?: string[] | null; // Array of ingredient IDs
     tags?: DietTag[];
 }
 
@@ -72,4 +66,8 @@ export interface ProductSearchParams extends ProductFilters {
 export interface ApiResponse<T> {
     data: T;
     message?: string;
+}
+
+export interface CreateProductWithPhotoRequest extends Omit<CreateProductRequest, 'photo_data'> {
+    photo_data?: File | null;
 }

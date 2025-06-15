@@ -11,13 +11,13 @@ import {
   getAllIngredients, 
   createIngredient, 
   updateIngredient, 
-  deleteIngredient 
+  deleteIngredient,
+  ingredientApi
 } from '@/entities/ingredient/api/ingredientApi';
 import { 
   getAllProducts, 
-  createProduct, 
-  updateProduct, 
-  deleteProduct 
+  deleteProduct, 
+  productApi
 } from '@/entities/product/api/productApi';
 import type { Ingredient, CreateIngredientRequest, UpdateIngredientRequest } from '@/entities/ingredient/model/types';
 import type { Product, CreateProductRequest, UpdateProductRequest } from '@/entities/product/model/types';
@@ -96,9 +96,32 @@ const ItemsManagementPage = () => {
   };
 
   const handleCreateIngredient = async (data: CreateIngredientRequest) => {
+    const { photoFile, photoRemoved, ...ingredientData } = data as any;
+
     try {
-      const response = await createIngredient(data);
-      setIngredients(prev => [...prev, response.data]);
+      let response;
+      if (photoFile instanceof File) {
+        console.log('ItemsManagementPage.handleCreateIngredient: photoFile is a File, calling createIngredientWithPhoto');
+        response = await ingredientApi.createIngredientWithPhoto({ 
+          ...(ingredientData as CreateIngredientRequest),
+          photo_data: photoFile 
+        });
+      } else {
+        console.log('ItemsManagementPage.handleCreateIngredient: photoFile is NOT a File, calling createIngredient');
+        const apiResponse = await createIngredient(ingredientData as CreateIngredientRequest);
+        response = apiResponse.data;
+      }
+      
+      if (response && typeof response.id === 'string') { // Check if response is a valid ingredient
+        setIngredients(prev => [...prev, response]);
+      } else {
+        console.error('Create ingredient response is invalid:', response);
+        notifications.show({
+          title: 'Error',
+          message: 'Failed to create ingredient: Invalid response from server.',
+          color: 'red',
+        });
+      }
       setIsIngredientFormOpen(false);
       notifications.show({
         title: 'Success',
@@ -117,14 +140,65 @@ const ItemsManagementPage = () => {
 
   const handleUpdateIngredient = async (data: UpdateIngredientRequest) => {
     if (!editingIngredient) return;
+    const { photoFile, photoRemoved, ...ingredientData } = data as any;
 
     try {
-      const response = await updateIngredient(editingIngredient.id, data);
-      setIngredients(prev => 
-        prev.map(ingredient => 
-          ingredient.id === editingIngredient.id ? response.data : ingredient
-        )
-      );
+      let response;
+      
+      // First, remove any photo_data from ingredientData that might have come from the form
+      // since we handle photo data separately through photoFile and photoRemoved
+      const { photo_data: _, ...cleanIngredientData } = ingredientData;
+      
+      if (photoFile instanceof File) {
+        console.log('ItemsManagementPage.handleUpdateIngredient: photoFile is a File, calling updateIngredientWithPhoto');
+        // Ensure name is defined for CreateIngredientWithPhotoRequest
+        const photoRequestData = {
+          name: cleanIngredientData.name || editingIngredient.name, // Fallback to existing name if not provided
+          shops: cleanIngredientData.shops,
+          calories_per_100g_or_ml: cleanIngredientData.calories_per_100g_or_ml,
+          macros_per_100g_or_ml: cleanIngredientData.macros_per_100g_or_ml,
+          tags: cleanIngredientData.tags || [],
+          photo_data: photoFile
+        };
+        response = await ingredientApi.updateIngredientWithPhoto(editingIngredient.id, photoRequestData);
+      } else if (photoRemoved) {
+        console.log('ItemsManagementPage.handleUpdateIngredient: photoRemoved is true, updating ingredient with photo_data: null');
+        console.log('Original ingredientData:', ingredientData);
+        // User wants to remove the existing photo, send update with photo_data: null
+        const updateDataWithPhotoRemoval: UpdateIngredientRequest = {
+          ...cleanIngredientData,
+          photo_data: null // Explicitly set to null to remove the photo
+        };
+        console.log('Final updateDataWithPhotoRemoval being sent:', updateDataWithPhotoRemoval);
+        console.log('JSON stringify of data being sent:', JSON.stringify(updateDataWithPhotoRemoval, null, 2));
+        const apiResponse = await updateIngredient(editingIngredient.id, updateDataWithPhotoRemoval);
+        response = apiResponse.data;
+      } else {
+        console.log('ItemsManagementPage.handleUpdateIngredient: no photo changes, calling regular updateIngredient with existing photo data');
+        // Include existing photo data to preserve it during update
+        const updateDataWithExistingPhoto: UpdateIngredientRequest = {
+          ...cleanIngredientData,
+          photo_data: editingIngredient.photo_data // Include existing photo data to preserve it
+        };
+        console.log('Update data with existing photo (preserving):', updateDataWithExistingPhoto);
+        const apiResponse = await updateIngredient(editingIngredient.id, updateDataWithExistingPhoto);
+        response = apiResponse.data;
+      }
+
+      if (response && typeof response.id === 'string') { // Check if response is a valid ingredient
+        setIngredients(prev => 
+          prev.map(ingredient => 
+            ingredient.id === editingIngredient.id ? response : ingredient
+          )
+        );
+      } else {
+        console.error('Update ingredient response is invalid:', response);
+        notifications.show({
+          title: 'Error',
+          message: 'Failed to update ingredient: Invalid response from server.',
+          color: 'red',
+        });
+      }
       setIsIngredientFormOpen(false);
       setEditingIngredient(null);
       notifications.show({
@@ -143,9 +217,31 @@ const ItemsManagementPage = () => {
   };
 
   const handleCreateProduct = async (data: CreateProductRequest) => {
+    const { photoFile, photoRemoved, ...productData } = data as any;
+
     try {
-      const response = await createProduct(data);
-      setProducts(prev => [...prev, response.data]);
+      let response;
+      if (photoFile instanceof File) {
+        console.log('ItemsManagementPage.handleCreateProduct: photoFile is a File, calling createProductWithPhoto');
+        response = await productApi.createProductWithPhoto({ 
+          ...(productData as CreateProductRequest),
+          photo_data: photoFile 
+        });
+      } else {
+        console.log('ItemsManagementPage.handleCreateProduct: photoFile is NOT a File, calling createProduct');
+        response = await productApi.createProduct(productData as CreateProductRequest);
+      }
+      
+      if (response && typeof response.id === 'string') { // Check if response is a valid product
+        setProducts(prev => [...prev, response]);
+      } else {
+        console.error('Create product response is invalid:', response);
+        notifications.show({
+          title: 'Error',
+          message: 'Failed to create product: Invalid response from server.',
+          color: 'red',
+        });
+      }
       setIsProductFormOpen(false);
       notifications.show({
         title: 'Success',
@@ -164,14 +260,64 @@ const ItemsManagementPage = () => {
 
   const handleUpdateProduct = async (data: UpdateProductRequest) => {
     if (!editingProduct) return;
+    const { photoFile, photoRemoved, ...productData } = data as any;
 
     try {
-      const response = await updateProduct(editingProduct.id, data);
-      setProducts(prev => 
-        prev.map(product => 
-          product.id === editingProduct.id ? response.data : product
-        )
-      );
+      let response;
+      
+      // First, remove any photo_data from productData that might have come from the form
+      // since we handle photo data separately through photoFile and photoRemoved
+      const { photo_data: _, ...cleanProductData } = productData;
+      
+      if (photoFile instanceof File) {
+        console.log('ItemsManagementPage.handleUpdateProduct: photoFile is a File, calling updateProductWithPhoto');
+        // Ensure name is defined for CreateProductWithPhotoRequest
+        const photoRequestData = {
+          name: cleanProductData.name || editingProduct.name, // Fallback to existing name if not provided
+          brand: cleanProductData.brand,
+          shop: cleanProductData.shop,
+          calories_per_100g_or_ml: cleanProductData.calories_per_100g_or_ml,
+          macros_per_100g_or_ml: cleanProductData.macros_per_100g_or_ml,
+          package_size_g_or_ml: cleanProductData.package_size_g_or_ml,
+          ingredients: cleanProductData.ingredients,
+          tags: cleanProductData.tags || [],
+          photo_data: photoFile
+        };
+        response = await productApi.updateProductWithPhoto(editingProduct.id, photoRequestData);
+      } else if (photoRemoved) {
+        // User wants to remove the existing photo, send update with photo_data: null
+        const updateDataWithPhotoRemoval: UpdateProductRequest = {
+          ...cleanProductData,
+          photo_data: null // Explicitly set to null to remove the photo
+        };
+        console.log('Final updateDataWithPhotoRemoval being sent:', updateDataWithPhotoRemoval);
+        console.log('JSON stringify of data being sent:', JSON.stringify(updateDataWithPhotoRemoval, null, 2));
+        response = await productApi.updateProduct(editingProduct.id, updateDataWithPhotoRemoval);
+      } else {
+        console.log('ItemsManagementPage.handleUpdateProduct: no photo changes, calling regular updateProduct with existing photo data');
+        // Include existing photo data to preserve it during update
+        const updateDataWithExistingPhoto: UpdateProductRequest = {
+          ...cleanProductData,
+          photo_data: editingProduct.photo_data // Include existing photo data to preserve it
+        };
+        console.log('Update data with existing photo (preserving):', updateDataWithExistingPhoto);
+        response = await productApi.updateProduct(editingProduct.id, updateDataWithExistingPhoto);
+      }
+
+      if (response && typeof response.id === 'string') { // Check if response is a valid product
+        setProducts(prev => 
+          prev.map(p => 
+            p.id === editingProduct.id ? response : p
+          )
+        );
+      } else {
+        console.error('Update product response is invalid:', response);
+        notifications.show({
+          title: 'Error',
+          message: 'Failed to update product: Invalid response from server.',
+          color: 'red',
+        });
+      }
       setIsProductFormOpen(false);
       setEditingProduct(null);
       notifications.show({
@@ -279,6 +425,7 @@ const ItemsManagementPage = () => {
           onSubmit={editingProduct ? handleUpdateProduct : handleCreateProduct}
           product={editingProduct}
           isEditing={!!editingProduct}
+          onSuccess={loadAllItems} // Refresh list on success
         />
       </Stack>
     </Container>

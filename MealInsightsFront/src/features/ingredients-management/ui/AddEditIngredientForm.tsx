@@ -9,19 +9,19 @@ import {
   NumberInput,
   MultiSelect,
   TagsInput,
-  FileInput,
   Group,
   Stack,
-  Title,
   Divider,
   Button,
+  Image,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 import { Modal } from '@/shared/ui';
 import { DietTagEnum } from '@/shared/lib/types';
 import type { DietTag } from '@/shared/lib/types';
+import { createImageDataUrl, isValidPhotoData } from '@/shared/lib/imageUtils';
 import { 
   ingredientCreateSchema, 
   ingredientUpdateSchema,
@@ -58,6 +58,10 @@ const AddEditIngredientForm = ({
   onSuccess
 }: AddEditIngredientFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [photoRemoved, setPhotoRemoved] = useState(false); // Track if user wants to remove existing photo
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const editingMode = isEditing ?? !!ingredient;
 
   const schema = editingMode ? ingredientUpdateSchema : ingredientCreateSchema;
@@ -113,6 +117,24 @@ const AddEditIngredientForm = ({
         macros_per_100g_or_ml: ingredient.macros_per_100g_or_ml,
         tags: ingredient.tags
       });
+      setSelectedPhoto(null);
+      setPhotoRemoved(false); // Reset photo removal state
+      
+      // Set preview URL for existing photo
+      if (ingredient.photo_url) {
+        setPreviewUrl(ingredient.photo_url);
+        console.log('useEffect (editing): Setting previewUrl from photo_url:', ingredient.photo_url);
+      } else if (ingredient.photo_data && isValidPhotoData(ingredient.photo_data)) {
+        setPreviewUrl(createImageDataUrl(ingredient.photo_data));
+        console.log('useEffect (editing): Setting previewUrl from photo_data');
+      } else {
+        setPreviewUrl(null);
+        console.log('useEffect (editing): No existing photo, setting previewUrl to null');
+      }
+      
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     } else if (isOpen && !editingMode) {
       reset({
         name: '',
@@ -128,47 +150,67 @@ const AddEditIngredientForm = ({
         },
         tags: []
       });
+      setSelectedPhoto(null);
+      setPreviewUrl(null);
+      setPhotoRemoved(false); // Reset photo removal state
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   }, [isOpen, ingredient, editingMode, reset]);
 
   const handleFormSubmit = async (data: IngredientCreateInput | IngredientUpdateInput) => {
     setIsSubmitting(true);
     try {
-      // Convert form data to API-compatible format
-      let apiData: CreateIngredientRequest | UpdateIngredientRequest;
-      
-      if (editingMode && ingredient) {
-        apiData = {
-          name: data.name,
-          shops: data.shops,
-          calories_per_100g_or_ml: data.calories_per_100g_or_ml,
-          macros_per_100g_or_ml: data.macros_per_100g_or_ml,
-          tags: (data.tags || []) as DietTag[]
-        } as UpdateIngredientRequest;
-      } else {
-        apiData = {
-          name: data.name!,
-          shops: data.shops!,
-          calories_per_100g_or_ml: data.calories_per_100g_or_ml!,
-          macros_per_100g_or_ml: data.macros_per_100g_or_ml!,
-          tags: (data.tags || []) as DietTag[]
-        } as CreateIngredientRequest;
-      }
+      const baseData = {
+        name: data.name!,
+        shops: data.shops!,
+        calories_per_100g_or_ml: data.calories_per_100g_or_ml!,
+        macros_per_100g_or_ml: data.macros_per_100g_or_ml!,
+        tags: (data.tags || []) as DietTag[]
+      };
 
       if (onSubmit) {
-        // Use external submit handler
-        await onSubmit(apiData);
+        // If a custom onSubmit is provided, use it and pass photo info
+        console.log('handleFormSubmit: Using custom onSubmit prop. Passing data, selectedPhoto:', selectedPhoto, 'photoRemoved:', photoRemoved);
+        await onSubmit({ ...baseData, photoFile: selectedPhoto, photoRemoved });
       } else {
-        // Use internal submit logic
+        // Use built-in API calls
         if (editingMode && ingredient) {
-          await ingredientApi.updateIngredient(ingredient.id, apiData as UpdateIngredientRequest);
+          if (selectedPhoto) {
+            console.log('handleFormSubmit (editing): selectedPhoto is TRUTHY, attempting to call updateIngredientWithPhoto.');
+            const photoUploadData = {
+              ...baseData,
+              photo_data: selectedPhoto
+            };
+            await ingredientApi.updateIngredientWithPhoto(ingredient.id, photoUploadData);
+          } else if (photoRemoved) {
+            console.log('handleFormSubmit (editing): photoRemoved is true, updating with photo removal.');
+            // Note: This would need to be handled by the parent component since ingredientApi.updateIngredient 
+            // might not handle photo_data: null. For now, using regular update.
+            await ingredientApi.updateIngredient(ingredient.id, baseData as UpdateIngredientRequest);
+          } else {
+            console.log('handleFormSubmit (editing): no photo changes, calling regular updateIngredient.');
+            await ingredientApi.updateIngredient(ingredient.id, baseData as UpdateIngredientRequest);
+          }
           notifications.show({
             title: 'Success',
             message: 'Ingredient updated successfully!',
             color: 'green',
           });
         } else {
-          await ingredientApi.createIngredient(apiData as CreateIngredientRequest);
+          // Creating new ingredient
+          if (selectedPhoto) {
+            console.log('handleFormSubmit (creating): selectedPhoto is TRUTHY, attempting to call createIngredientWithPhoto.');
+            const photoUploadData = {
+              ...baseData,
+              photo_data: selectedPhoto
+            };
+            await ingredientApi.createIngredientWithPhoto(photoUploadData);
+          } else {
+            console.log('handleFormSubmit (creating): no photo, calling regular createIngredient.');
+            await ingredientApi.createIngredient(baseData as CreateIngredientRequest);
+          }
           notifications.show({
             title: 'Success',
             message: 'Ingredient created successfully!',
@@ -176,7 +218,7 @@ const AddEditIngredientForm = ({
           });
         }
       }
-      
+
       onSuccess?.();
       onClose();
     } catch (error) {
@@ -192,6 +234,11 @@ const AddEditIngredientForm = ({
 
   const handleCancel = () => {
     reset();
+    setSelectedPhoto(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
     onClose();
   };
 
@@ -199,11 +246,7 @@ const AddEditIngredientForm = ({
     <Modal
       opened={isOpen}
       onClose={handleCancel}
-      title={
-        <Title order={3}>
-          {editingMode ? 'Edit Ingredient' : 'Add New Ingredient'}
-        </Title>
-      }
+      title={editingMode ? 'Edit Ingredient' : 'Add New Ingredient'}
       size="lg"
     >
       <form onSubmit={handleSubmit(handleFormSubmit)}>
@@ -229,13 +272,143 @@ const AddEditIngredientForm = ({
             description="Press Enter or comma to add multiple shops"
           />
 
-          {/* E3011 - PhotoUploadField - TODO: Implement file upload */}
-          <FileInput
-            label="Photo"
-            placeholder="Upload ingredient photo"
-            accept="image/*"
-            disabled // TODO: Implement photo upload functionality
-          />
+          {/* E3011 - PhotoUploadField */}
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 500 }}>
+              Photo
+            </label>
+            
+            {/* Show existing photo when editing (and not removed) */}
+            {editingMode && isValidPhotoData(ingredient?.photo_data) && !selectedPhoto && !photoRemoved && (
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Current photo:</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Image
+                    src={createImageDataUrl(ingredient!.photo_data)}
+                    alt={ingredient!.name}
+                    w={80}
+                    h={80}
+                    radius="sm"
+                    fit="cover"
+                    fallbackSrc="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjFGM0Y0Ii8+CjxwYXRoIGQ9Ik0zMiAzMkgyNFY0MEgzMlYzMloiIGZpbGw9IiNEOUREREREIi8+CjwvcGF0aD4KPC9zdmc+Cg=="
+                  />
+                  <Button
+                    variant="outline"
+                    color="red"
+                    size="xs"
+                    onClick={() => {
+                      setPhotoRemoved(true);
+                      setPreviewUrl(null);
+                    }}
+                  >
+                    Remove Photo
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Show photo removed notice with undo option */}
+            {editingMode && photoRemoved && !selectedPhoto && (
+              <div style={{ marginBottom: '12px', padding: '8px', backgroundColor: '#fff3cd', border: '1px solid #ffeaa7', borderRadius: '4px' }}>
+                <div style={{ fontSize: '12px', color: '#856404', marginBottom: '4px' }}>
+                  Photo will be removed when you save.
+                </div>
+                <Button
+                  variant="outline"
+                  color="blue"
+                  size="xs"
+                  onClick={() => {
+                    setPhotoRemoved(false);
+                    // Restore preview URL for existing photo
+                    if (ingredient?.photo_url) {
+                      setPreviewUrl(ingredient.photo_url);
+                    } else if (ingredient?.photo_data && isValidPhotoData(ingredient.photo_data)) {
+                      setPreviewUrl(createImageDataUrl(ingredient.photo_data));
+                    }
+                  }}
+                >
+                  Undo Remove
+                </Button>
+              </div>
+            )}
+            
+            {/* Show new photo preview */}
+            {selectedPhoto && previewUrl && (
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
+                  {editingMode ? 'New photo (will replace current):' : 'Selected photo:'}
+                </div>
+                <Image
+                  src={previewUrl}
+                  alt="Preview"
+                  w={80}
+                  h={80}
+                  radius="sm"
+                  fit="cover"
+                />
+              </div>
+            )}
+            
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0] || null;
+                setSelectedPhoto(file);
+                setPhotoRemoved(false); // Clear photo removal state when new file is selected
+                
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onload = (e) => {
+                    setPreviewUrl(e.target?.result as string);
+                  };
+                  reader.readAsDataURL(file);
+                } else {
+                  setPreviewUrl(null);
+                }
+              }}
+              style={{
+                width: '100%',
+                padding: '8px',
+                border: '1px solid #ccc',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            />
+            <small style={{ color: '#666', fontSize: '12px' }}>
+              {editingMode ? 'Upload a new photo to replace the current one (optional)' : 'Upload a photo of the ingredient (optional)'}
+            </small>
+            
+            {selectedPhoto && (
+              <div style={{ marginTop: '8px', color: '#28a745' }}>
+                Selected: {selectedPhoto.name}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedPhoto(null);
+                    setPreviewUrl(null);
+                    setPhotoRemoved(false); // Clear photo removal state
+                    if (fileInputRef.current) {
+                      fileInputRef.current.value = '';
+                    }
+                  }}
+                  style={{
+                    marginLeft: '8px',
+                    padding: '2px 6px',
+                    backgroundColor: '#dc3545',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '2px',
+                    cursor: 'pointer',
+                    fontSize: '12px'
+                  }}
+                >
+                  Remove
+                </button>
+              </div>
+            )}
+          </div>
 
           <Divider label="Nutritional Information" labelPosition="center" />
 

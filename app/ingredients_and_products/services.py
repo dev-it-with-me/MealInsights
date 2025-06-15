@@ -442,7 +442,7 @@ class ProductService:
         product_id: uuid.UUID,
         name: None | str = None,
         brand: None | str = None,
-        photo_data: None | bytes = None,  # Accept str for sentinel value
+        photo_data: None | bytes = None,
         shop: None | str = None,
         calories_per_100g_or_ml: None | float = None,
         macros_per_100g_or_ml: None | Macros = None,
