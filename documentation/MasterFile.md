@@ -32,7 +32,7 @@ URL: `/ingredients`
 | ID                                             | Name                     | Type                    | Functionality                                                                                      | Goal                                                      | Trigger                                              | Tickets | Current Version                    |
 | :--------------------------------------------- | :----------------------- | :---------------------- | :------------------------------------------------------------------------------------------------- | :-------------------------------------------------------- | :--------------------------------------------------- | :------ | :--------------------------------- |
 | C1000 [↗](#c1000-addeditingredientform)        | AddEditIngredientForm    | Form                    | Allows input/edit of ingredient details (name, photo, shop, calories, macros, tags).               | To create or update an ingredient.                        | `Button E3001 (On Add New)` / `Click C1025 Item (On Edit)` | TBD     | DEV:-,QA:-,UAT:-,PPRD:-,PROD:- |
-| C1024 [↗](#c1024-addeditproductform)           | AddEditProductForm       | Form                    | Allows input/edit of product details (name, brand, barcode, package size, calories, macros, tags). | To create or update a product.                            | `Button E3002 (On Add New)` / `Click C1025 Item (On Edit)` | TBD     | DEV:-,QA:-,UAT:-,PPRD:-,PROD:- |
+| C1024 [↗](#c1024-addeditproductform)           | AddEditProductForm       | Form                    | Allows input/edit of product details (name, brand, package size, calories, macros, tags). | To create or update a product.                            | `Button E3002 (On Add New)` / `Click C1025 Item (On Edit)` | TBD     | DEV:-,QA:-,UAT:-,PPRD:-,PROD:- |
 | E3001                                          | AddNewIngredientButton   | Button                  | Opens the AddEditIngredientForm for a new ingredient.                                              | To initiate adding a new ingredient.                      | ---                                                  | TBD     | DEV:-,QA:-,UAT:-,PPRD:-,PROD:- |
 | E3002                                          | AddNewProductButton      | Button                  | Opens the AddEditProductForm for a new product.                                                    | To initiate adding a new product.                         | ---                                                  | TBD     | DEV:-,QA:-,UAT:-,PPRD:-,PROD:- |
 | C1025 [↗](#c1025-unifieditemslist)             | UnifiedItemsList         | List of Dynamic Objects | Displays both ingredients and products with unified filtering and management capabilities.           | To view and manage all items in one interface.            | ---                                                  | TBD     | DEV:-,QA:-,UAT:-,PPRD:-,PROD:- |
@@ -64,13 +64,17 @@ Purpose:
 - Create new product entries
 - Edit existing product information
 - Validate product data using Zod schemas
-- Handle product-specific fields (brand, barcode, package size, ingredients composition)
+- Handle product-specific fields (brand, package size, ingredients composition)
 
 Key Fields/Features:
-- Basic Information: Name (required), Brand (optional), Barcode (optional), Package size in g or ml (optional)
+- Basic Information: Name (required), Brand (optional),  Package size in g or ml (optional)
 - Nutritional Information (per 100g): Calories, Protein, Carbohydrates, Fat, Fiber
 - Classification: Diet tags (multi-select), Ingredients composition (textarea)
 - Modal Interface, Zod schema validation, Dual Mode (Create/Edit)
+
+Beside all of the fields from `C1000.AddEditIngredientForm`, it includes:
+- **BrandField (Text Input):** Input for product brand. Goal: To capture the brand of the product.
+- **Add Ingredients:** Button to add ingredients to the product. Goal: To associate ingredients with the product. - It add the field in form that allows to add ingredients to the product - you can search for ingredients by name and select them, and they will be added to the product's ingredients composition. It Ingredient does not have to be in the system, user can also add it from here.
 
 ## List of Dynamic Objects C1025.UnifiedItemsList {#c1025-unifieditemslist}
 UnifiedItemsList is a comprehensive component that displays both ingredients and products in a unified interface with filtering, sorting, and management capabilities. This list is part of `P0100.ManageItemsPage`.
@@ -108,12 +112,10 @@ Compose meals from ingredients, add description, photo, recipe. Manage equivalen
 Key elements of this form include:
 - **MealNameField (Text Input):** Input for meal name. Goal: To capture the meal's name.
 - **MealPhotoUploadField (File Input):** Input for meal photo. Goal: To upload an image for the meal.
-- **MealDescriptionField (Text Area):** Input for meal description. Goal: To provide details about the meal.
 - **MealRecipeEditor (Rich Text Editor):** Input for meal recipe using a basic text editor. Goal: To write down the preparation steps for the meal.
-- **C1020 IngredientSelectorForMeal [↗](#c1020-ingredientselectorformeal) (Component):** Allows selecting ingredients and specifying quantities for the meal. Goal: To compose the meal from available ingredients.
-- **C1021 IngredientEquivalentsManager [↗](#c1021-ingredientequivalentsmanager) (Component):** For each ingredient in the meal, allows specifying equivalent ingredients. Goal: To offer flexibility in meal preparation.
-- **IsReadyMealCheckbox (Checkbox):** Indicates if the meal is a ready meal bought from a shop/restaurant. Goal: To differentiate between home-cooked and pre-made meals.
-- **ReadyMealIngredientsField (Text Area):** If a ready meal, input for its list of ingredients. Goal: To record ingredients of a pre-made meal. (Trigger: `Checkbox IsReadyMealCheckbox (On Checked)`)
+- **C1020 IngredientSelectorForMeal [↗](#c1020-ingredientselectorformeal) (Component):** Allows selecting ingredients/products and specifying quantities for the meal. Goal: To compose the meal from available ingredients and products.
+- **C1021 IngredientEquivalentsManager [↗](#c1021-ingredientequivalentsmanager) (Component):** For each ingredient/product in the meal, allows specifying equivalent ingredients/products. Goal: To offer flexibility in meal preparation.
+- **CalculateCaloriesAndMacrosButton (Button):** Calculates total calories and macros for the meal based on selected ingredients. Goal: To auto-calculate nutritional values for the meal.
 - **MealCaloriesField (Number Input):** Input for total meal calories (can be auto-calculated or manually overridden). Goal: To set/view the meal's total calorie count.
 - **MealMacrosProteinField (Number Input):** Input for meal protein (can be auto-calculated or manually overridden). Goal: To set/view the meal's total protein.
 - **MealMacrosCarbsField (Number Input):** Input for meal carbs (can be auto-calculated or manually overridden). Goal: To set/view the meal's total carbs.
@@ -126,23 +128,23 @@ Key elements of this form include:
 - **CancelMealButton (Button):** Cancels the form and closes it. Goal: To discard changes and close the form.
 
 ## Component C1020.IngredientSelectorForMeal {#c1020-ingredientselectorformeal}
-Allows selecting ingredients and specifying quantities for the meal. This component is part of `C1004.AddEditMealForm`.
+Allows selecting ingredients and products and specifying quantities for the meal. This component is part of `C1004.AddEditMealForm`.
 It includes:
-- **IngredientSearchField (Text Input/Search):** Allows searching for available ingredients by name. Goal: To quickly find ingredients to add to the meal.
-- **C1024 SearchResultsList (List):** Displays ingredients matching the search query. Goal: To present selectable ingredients to the user.
-- **QuantityInput (Number Input):** Input for specifying the quantity of the selected ingredient (e.g., grams, pcs). Goal: To define how much of an ingredient is used in the meal.
-- **UnitSelector (Dropdown/Select):** Allows selecting the unit for the quantity (e.g., g, ml, piece). Goal: To specify the measurement unit for the ingredient quantity.
-- **AddIngredientToMealButton (Button):** Adds the selected ingredient with specified quantity to the current meal's list. Goal: To include the ingredient in the meal composition.
-- **C1025 SelectedIngredientsForMeal (Table/List):** Displays ingredients already added to the meal, with quantities and options to remove. Goal: To show the current composition of the meal and allow modifications.
+- **IngredientSearchField (Text Input/Search):** Allows searching for available ingredients/products by name. Goal: To quickly find ingredients/products to add to the meal.
+- **C1024 SearchResultsList (List):** Displays ingredients and products matching the search query. Goal: To present selectable ingredients and products to the user.
+- **QuantityInput (Number Input):** Input for specifying the quantity of the selected ingredient/product (e.g., grams, pcs). Goal: To define how much of an ingredient/product is used in the meal.
+- **UnitSelector (Dropdown/Select):** Allows selecting the unit for the quantity (e.g., g, ml, piece). Goal: To specify the measurement unit for the ingredient/product quantity.
+- **AddIngredientToMealButton (Button):** Adds the selected ingredient/product with specified quantity to the current meal's list. Goal: To include the ingredient/product in the meal composition.
+- **C1025 SelectedIngredientsForMeal (Table/List):** Displays ingredients and products already added to the meal, with quantities and options to remove. Goal: To show the current composition of the meal and allow modifications.
 *Note: C1024 and C1025 within C1020 are local list components, not the page-level C1024/C1025.*
 
 ## Component C1021.IngredientEquivalentsManager {#c1021-ingredientequivalentsmanager}
-For each ingredient in the meal, allows specifying equivalent ingredients. This component is part of `C1004.AddEditMealForm`.
+For each ingredient/product in the meal, allows specifying equivalent ingredients/products. This component is part of `C1004.AddEditMealForm`.
 Key elements are:
-- **MealIngredientDropdown (Dropdown/Select):** Selects an ingredient from the current meal to manage its equivalents. Goal: To choose which meal ingredient to define alternatives for. (Trigger: `Changes in C1025 (SelectedIngredientsForMeal)`)
-- **C1026 EquivalentIngredientSearch (Component):** Allows searching and selecting ingredients that can be used as equivalents. Goal: To find and add alternative ingredients. (Trigger: `Selection in MealIngredientDropdown`)
-- **AddEquivalentButton (Button):** Adds the selected ingredient from C1026 as an equivalent. Goal: To list an alternative for the chosen meal ingredient. (Trigger: `Selection in C1026 and MealIngredientDropdown`)
-- **C1027 CurrentEquivalentsList (List):** Displays the list of equivalents for the meal ingredient selected in MealIngredientDropdown. Goal: To show currently defined alternatives for a specific ingredient. (Trigger: `Selection in MealIngredientDropdown / Click AddEquivalentButton`)
+- **MealIngredientDropdown (Dropdown/Select):** Selects an ingredient/product from the current meal to manage its equivalents. Goal: To choose which meal ingredient/product to define alternatives for. (Trigger: `Changes in C1025 (SelectedIngredientsForMeal)`)
+- **C1026 EquivalentIngredientSearch (Component):** Allows searching and selecting ingredients/products that can be used as equivalents. Goal: To find and add alternative ingredients/products. (Trigger: `Selection in MealIngredientDropdown`)
+- **AddEquivalentButton (Button):** Adds the selected ingredient/product from C1026 as an equivalent. Goal: To list an alternative for the chosen meal ingredient/product. (Trigger: `Selection in C1026 and MealIngredientDropdown`)
+- **C1027 CurrentEquivalentsList (List):** Displays the list of equivalents for the meal ingredient/product selected in MealIngredientDropdown. Goal: To show currently defined alternatives for a specific ingredient/product. (Trigger: `Selection in MealIngredientDropdown / Click AddEquivalentButton`)
 *Note: C1026 and C1027 within C1021 are local list/component, not page-level components.*
 
 ## List of Dynamic Objects C1005.MealsList {#c1005-mealslist}
