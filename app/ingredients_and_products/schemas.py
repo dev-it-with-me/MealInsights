@@ -4,8 +4,9 @@ These schemas are used for API validation and documentation.
 """
 
 import uuid
+import base64
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
 
 from app.models import Macros
 from app.enums import DietTagEnum
@@ -88,6 +89,13 @@ class IngredientResponseSchema(BaseModel):
         ..., description="Tags associated with the ingredient"
     )
 
+    @field_serializer("photo_data")
+    def serialize_photo_data(self, value: bytes | None) -> str | None:
+        """Convert binary photo data to base64 string for JSON serialization."""
+        if value is None:
+            return None
+        return base64.b64encode(value).decode("utf-8")
+
     model_config = {"extra": "forbid", "from_attributes": True}
 
 
@@ -102,9 +110,6 @@ class IngredientsListSchema(BaseModel):
     limit: int = Field(..., description="Maximum number of ingredients returned")
 
     model_config = {"extra": "forbid"}
-
-
-# NOTE: IngredientQuantity model and schemas have been removed in favor of simplified Product.ingredients structure
 
 
 # Product Schemas
@@ -196,7 +201,6 @@ class ProductResponseSchema(BaseModel):
     shop: None | str = Field(
         default=None, description="Shop where the product was bought"
     )
-    barcode: None | str = Field(default=None, description="Barcode of the product")
     calories_per_100g_or_ml: None | float = Field(
         default=None, description="Calories per 100g or 100ml"
     )
@@ -211,6 +215,13 @@ class ProductResponseSchema(BaseModel):
         description="List of ingredients used in this product",
     )
     tags: list[DietTagEnum] = Field(..., description="Tags associated with the product")
+
+    @field_serializer("photo_data")
+    def serialize_photo_data(self, value: bytes | None) -> str | None:
+        """Convert binary photo data to base64 string for JSON serialization."""
+        if value is None:
+            return None
+        return base64.b64encode(value).decode("utf-8")
 
     model_config = {"extra": "forbid", "from_attributes": True}
 

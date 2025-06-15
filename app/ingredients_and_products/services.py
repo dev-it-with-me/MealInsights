@@ -198,12 +198,33 @@ class IngredientService:
                 if macros_per_100g_or_ml is not None
                 else existing.macros_per_100g_or_ml
             ),
-            photo_data=photo_data if photo_data is not None else existing.photo_data,
+            photo_data=photo_data,
             shops=cleaned_shops,
             tags=tags if tags is not None else existing.tags,
         )
         logger.info(f"Updating ingredient: {ingredient_id}")
-        return self.repository.update(updated)
+
+        # Check if tags have changed
+        tags_changed = tags is not None and set(tags) != set(existing.tags)
+
+        # Update the ingredient
+        updated_ingredient = self.repository.update(updated)
+
+        # If tags changed, update all products that contain this ingredient
+        if tags_changed and updated_ingredient:
+            from .dependencies import (
+                get_product_service,
+            )  # Import here to avoid circular imports
+
+            product_service = get_product_service(self.session)
+            updated_products = product_service.update_products_with_ingredient_tags(
+                ingredient_id, updated_ingredient.tags
+            )
+            logger.info(
+                f"Updated {len(updated_products)} products due to ingredient tag changes"
+            )
+
+        return updated_ingredient
 
     def delete_ingredient(self, ingredient_id: uuid.UUID) -> bool:
         """
@@ -307,7 +328,6 @@ class ProductService:
             brand: None |  brand name
             photo_data: None |  photo data
             shop: None |  shop where product was bought
-            barcode: None |  product barcode
             calories_per_100g_or_ml: None |  calories per 100g or 100ml
             macros_per_100g_or_ml: None |  macronutrients per 100g or 100ml
             package_size_g_or_ml: None |  total package size
@@ -379,21 +399,6 @@ class ProductService:
         """
         return self.repository.get_by_id(product_id)
 
-    def get_product_by_barcode(self, barcode: str) -> None | Product:
-        """
-        Get a product by its barcode.
-
-        Args:
-            barcode: The product barcode
-
-        Returns:
-            Product | None: The found product or None
-        """
-        if not barcode.strip():
-            raise ValueError("Barcode cannot be empty")
-
-        return self.repository.get_by_barcode(barcode.strip())
-
     def get_all_products(
         self,
         skip: int = 0,
@@ -437,7 +442,7 @@ class ProductService:
         product_id: uuid.UUID,
         name: None | str = None,
         brand: None | str = None,
-        photo_data: None | bytes = None,
+        photo_data: None | bytes = None,  # Accept str for sentinel value
         shop: None | str = None,
         calories_per_100g_or_ml: None | float = None,
         macros_per_100g_or_ml: None | Macros = None,
@@ -454,7 +459,6 @@ class ProductService:
             brand: None |  new brand
             photo_data: None |  new photo data
             shop: None |  new shop
-            barcode: None |  new barcode
             calories_per_100g_or_ml: None |  new calories
             macros_per_100g_or_ml: None |  new macros
             package_size_g_or_ml: None |  new package size
@@ -488,18 +492,10 @@ class ProductService:
             raise ValueError("Package size must be positive")
 
         tags_from_ingredients: list[DietTagEnum] = []
-        # Validate ingredients exist if provided
+        print("ingredients", ingredients)
         if ingredients is not None:
             for ingredient in ingredients:
-                try:
-                    # Validate that the ingredient exists
-                    existing_ingredient: Ingredient | None = (
-                        self.ingredient_repository.get_by_id(ingredient.id)
-                    )
-                    if existing_ingredient is not None:
-                        tags_from_ingredients.extend(existing_ingredient.tags)
-                except IngredientNotFoundError:
-                    raise ValueError(f"Ingredient with ID {ingredient.id} not found")
+                tags_from_ingredients.extend(ingredient.tags)
 
         # Fetch existing product
         existing = self.repository.get_by_id(product_id)
@@ -517,7 +513,7 @@ class ProductService:
             id=product_id,
             name=name.strip() if name is not None else existing.name,
             brand=brand.strip() if brand is not None else existing.brand,
-            photo_data=photo_data if photo_data is not None else existing.photo_data,
+            photo_data=photo_data,
             shop=shop.strip() if shop is not None else existing.shop,
             calories_per_100g_or_ml=(
                 calories_per_100g_or_ml
@@ -592,6 +588,68 @@ class ProductService:
             raise ValueError("At least one tag must be specified")
 
         return self.repository.get_all(tag_filter=tags)
+
+    def get_products_by_ingredient_id(self, ingredient_id: uuid.UUID) -> list[Product]:
+        """
+        Get all products that contain a specific ingredient.
+
+        Args:
+            ingredient_id: The ingredient ID to search for
+
+        Returns:
+            list[Product]: List of products containing the ingredient
+        """
+        return self.repository.get_products_by_ingredient_id(ingredient_id)
+
+    def update_products_with_ingredient_tags(
+        self, ingredient_id: uuid.UUID, new_ingredient_tags: list[DietTagEnum]
+    ) -> list[Product]:
+        """
+        Update all products that contain a specific ingredient to include the ingredient's tags.
+
+        Args:
+            ingredient_id: The ingredient ID
+            new_ingredient_tags: The new tags from the ingredient
+
+        Returns:
+            list[Product]: List of updated products
+        """
+        # Get all products that contain this ingredient
+        products = self.get_products_by_ingredient_id(ingredient_id)
+        updated_products = []
+        print("products", products)
+        for product in products:
+            # Calculate new tags from all ingredients
+            all_ingredient_tags = set()
+            if product.ingredients:
+                for ingredient in product.ingredients:
+                    if ingredient.id == ingredient_id:
+                        # Use the new tags for this ingredient
+                        all_ingredient_tags.update(new_ingredient_tags)
+                    else:
+                        # Use existing tags for other ingredients
+                        all_ingredient_tags.update(ingredient.tags)
+
+            # Combine with product's own tags (if any)
+            combined_tags = list(set(product.tags) | all_ingredient_tags)
+
+            # Update the product with new tags
+            updated_product = self.update_product(
+                product_id=product.id,
+                name=product.name,
+                brand=product.brand,
+                photo_data=product.photo_data,
+                shop=product.shop,
+                calories_per_100g_or_ml=product.calories_per_100g_or_ml,
+                macros_per_100g_or_ml=product.macros_per_100g_or_ml,
+                package_size_g_or_ml=product.package_size_g_or_ml,
+                ingredients=product.ingredients,
+                tags=combined_tags,
+            )
+            if updated_product:
+                updated_products.append(updated_product)
+
+        return updated_products
 
     def calculate_product_total_nutrition(self, product: Product) -> None | dict:
         """

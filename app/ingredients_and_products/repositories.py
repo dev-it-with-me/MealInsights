@@ -13,14 +13,13 @@ from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.engine import CursorResult
 
-from app.enums import DietTagEnum, UnitEnum
+from app.enums import DietTagEnum
 from app.models import Macros  # Assuming Macros is a Pydantic model
 from .models import Ingredient, Product  # Pydantic models
 from .exceptions import (
     DatabaseError,
     IngredientNotFoundError,
     ProductNotFoundError,
-    DuplicateProductError,  # Assuming this is a custom exception
     # Add DuplicateIngredientError if you have one, or handle appropriately
 )
 
@@ -56,10 +55,15 @@ class IngredientRepository:
             # Handle legacy single shop data
             shops_data = [shops_data] if shops_data else []
 
+        # Convert photo_data from memoryview to bytes if needed
+        photo_data = row_dict.get("photo_data")
+        if isinstance(photo_data, memoryview):
+            photo_data = bytes(photo_data)
+
         return Ingredient(
             id=row_dict.get("id"),  # type: ignore
             name=row_dict.get("name"),  # type: ignore
-            photo_data=row_dict.get("photo_data"),
+            photo_data=photo_data,
             shops=shops_data,
             calories_per_100g_or_ml=row_dict.get("calories_per_100g_or_ml", 0),
             macros_per_100g_or_ml=Macros(
@@ -406,11 +410,16 @@ class ProductRepository:
                 saturated_fat=row_dict.get("macros_saturated_fat_g_per_100g_or_ml", 0),
             )
 
+        # Convert photo_data from memoryview to bytes if needed
+        photo_data = row_dict.get("photo_data")
+        if isinstance(photo_data, memoryview):
+            photo_data = bytes(photo_data)
+
         return Product(
             id=row_dict.get("id"),  # type: ignore
             name=row_dict.get("name"),  # type: ignore
             brand=row_dict.get("brand"),
-            photo_data=row_dict.get("photo_data"),
+            photo_data=photo_data,
             shop=row_dict.get("shop"),
             calories_per_100g_or_ml=row_dict.get("calories_per_100g_or_ml"),
             macros_per_100g_or_ml=macros,
@@ -420,7 +429,7 @@ class ProductRepository:
         )
 
     def _fetch_ingredient_details_for_product(
-        self, ingredient_id: uuid.UUID, quantity: float, unit: UnitEnum
+        self, ingredient_id: uuid.UUID
     ) -> None | Ingredient:
         """Fetches a single ingredient's details and wraps it in Ingredient."""
         # This uses the IngredientRepository's get_by_id for simplicity and consistency
@@ -492,7 +501,7 @@ class ProductRepository:
                     macros_saturated_fat_g_per_100g_or_ml,
                     package_size_g_or_ml
                 ) VALUES (
-                    :id, :name, :brand, :photo_data, :shop, :barcode,
+                    :id, :name, :brand, :photo_data, :shop,
                     :calories, :protein, :carbs, :sugar, :fat, :fiber, :saturated_fat, :package_size
                 )
             """)
@@ -588,7 +597,7 @@ class ProductRepository:
             # Fetch product ingredients
             product_ingredients_list: list[Ingredient] = []
             sql_pi = text("""
-                SELECT ingredient_id, quantity, unit 
+                SELECT ingredient_id
                 FROM product_ingredients 
                 WHERE product_id = :product_id
             """)
@@ -601,13 +610,11 @@ class ProductRepository:
                 if not pi_row:
                     continue
 
-                ingredient_quantity_obj = self._fetch_ingredient_details_for_product(
+                ingredient_obj = self._fetch_ingredient_details_for_product(
                     ingredient_id=pi_row["ingredient_id"],
-                    quantity=pi_row["quantity"],
-                    unit=UnitEnum(pi_row["unit"]),  # Ensure unit is converted to Enum
                 )
-                if ingredient_quantity_obj:
-                    product_ingredients_list.append(ingredient_quantity_obj)
+                if ingredient_obj:
+                    product_ingredients_list.append(ingredient_obj)
 
             return self._map_row_to_product(
                 product_row_dict, tags, product_ingredients_list
@@ -689,25 +696,6 @@ class ProductRepository:
             logger.error(f"Database error fetching all products: {e}")
             raise DatabaseError("products fetch all", str(e))
 
-    def get_by_barcode(self, barcode: str) -> None | Product:
-        """Retrieves a product by its barcode using raw SQL."""
-        try:
-            sql_select_product_id = text(
-                "SELECT id FROM products WHERE barcode = :barcode"
-            )
-            result = self.session.execute(
-                sql_select_product_id, {"barcode": barcode}
-            ).first()
-
-            if not result:
-                return None
-
-            product_id = result[0]
-            return self.get_by_id(product_id)  # Reuses get_by_id to load full details
-        except SQLAlchemyError as e:
-            logger.error(f"Database error fetching product by barcode {barcode}: {e}")
-            raise DatabaseError("product fetch by barcode", str(e))
-
     def update(self, product_update: Product) -> None | Product:
         """Updates a product using raw SQL."""
         try:
@@ -721,7 +709,7 @@ class ProductRepository:
             sql_update_product = text("""
                 UPDATE products SET
                     name = :name, brand = :brand, photo_data = :photo_data, shop = :shop,
-                    barcode = :barcode, calories_per_100g_or_ml = :calories,
+                    calories_per_100g_or_ml = :calories,
                     macros_protein_g_per_100g_or_ml = :protein,
                     macros_carbohydrates_g_per_100g_or_ml = :carbs,
                     macros_sugar_g_per_100g_or_ml = :sugar,
@@ -840,3 +828,64 @@ class ProductRepository:
     def search_by_name(self, name_pattern: str, limit: int = 10) -> list[Product]:
         """Searches products by name pattern using raw SQL. Ingredients not loaded."""
         return self.get_all(limit=limit, name_filter=name_pattern)
+
+    def get_products_by_ingredient_id(self, ingredient_id: uuid.UUID) -> list[Product]:
+        """Get all products that contain a specific ingredient."""
+        try:
+            sql_query = text("""
+                SELECT DISTINCT p.* FROM products p
+                JOIN product_ingredients pi ON p.id = pi.product_id
+                WHERE pi.ingredient_id = :ingredient_id
+            """)
+            results = self.session.execute(
+                sql_query, {"ingredient_id": ingredient_id}
+            ).fetchall()
+
+            product_list = []
+            for row_tuple in results:
+                row = row_to_dict(row_tuple)
+                if not row:
+                    continue
+
+                # Fetch tags for this product
+                sql_select_tags = text(
+                    "SELECT tag FROM product_tags WHERE product_id = :product_id"
+                )
+                tag_results = self.session.execute(
+                    sql_select_tags, {"product_id": row["id"]}
+                ).fetchall()
+                tags = [DietTagEnum(tag_row[0]) for tag_row in tag_results]
+
+                # For simplicity, we'll load ingredients for these products since we need them
+                # to update tags properly
+                sql_select_product_ingredients = text(
+                    "SELECT ingredient_id FROM product_ingredients WHERE product_id = :product_id"
+                )
+                pi_results = self.session.execute(
+                    sql_select_product_ingredients, {"product_id": row["id"]}
+                ).fetchall()
+
+                product_ingredients_list = []
+                for pi_row_tuple in pi_results:
+                    pi_row = row_to_dict(pi_row_tuple)
+                    if not pi_row:
+                        continue
+
+                    ingredient_obj = self._fetch_ingredient_details_for_product(
+                        ingredient_id=pi_row["ingredient_id"],
+                    )
+                    if ingredient_obj:
+                        product_ingredients_list.append(ingredient_obj)
+
+                product_model = self._map_row_to_product(
+                    row, tags, product_ingredients_list
+                )
+                if product_model:
+                    product_list.append(product_model)
+
+            return product_list
+        except SQLAlchemyError as e:
+            logger.error(
+                f"Database error getting products by ingredient {ingredient_id}: {e}"
+            )
+            raise DatabaseError("get products by ingredient", str(e))
