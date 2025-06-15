@@ -45,12 +45,8 @@ class DuplicateIngredientError(IngredientsProductsBaseException):
 class DuplicateProductError(IngredientsProductsBaseException):
     """Raised when attempting to create a duplicate product."""
 
-    def __init__(
-        self, product_name: str | None = None, barcode: str | None = None
-    ) -> None:
-        if barcode:
-            message = f"Product with barcode '{barcode}' already exists"
-        elif product_name:
+    def __init__(self, product_name: str | None = None) -> None:
+        if product_name:
             message = f"Product with name '{product_name}' already exists"
         else:
             message = "Duplicate product"

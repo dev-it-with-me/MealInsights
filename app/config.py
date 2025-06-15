@@ -50,6 +50,14 @@ class Settings(BaseSettings):
     debug: bool = Field(default=True)
     log_level: str = Field(default="INFO")
 
+    # Database logging settings
+    db_echo: bool = Field(
+        default=False, alias="DB_ECHO"
+    )  # Control SQL query logging separately
+    db_log_level: str = Field(
+        default="WARNING", alias="DB_LOG_LEVEL"
+    )  # SQLAlchemy log level
+
     @property
     def database(self) -> DatabaseSettings:
         """Get database configuration."""
@@ -64,8 +72,29 @@ class Settings(BaseSettings):
     model_config = {"extra": "forbid", "env_file": ".env", "env_file_encoding": "utf-8"}
 
 
+def configure_db_logging() -> None:
+    """Configure SQLAlchemy logging levels to reduce verbosity."""
+    import logging
+
+    # Set SQLAlchemy engine logging level
+    sqlalchemy_logger = logging.getLogger("sqlalchemy.engine")
+    sqlalchemy_logger.setLevel(getattr(logging, settings.db_log_level.upper()))
+
+    # Optionally disable specific SQLAlchemy loggers
+    logging.getLogger("sqlalchemy.engine.Engine").setLevel(logging.WARNING)
+    logging.getLogger("sqlalchemy.pool").setLevel(logging.WARNING)
+    logging.getLogger("sqlalchemy.dialects").setLevel(logging.WARNING)
+
+    logger.info(
+        f"Database logging configured: echo={settings.db_echo}, level={settings.db_log_level}"
+    )
+
+
 # Global settings instance
 settings = Settings()
+
+# Configure database logging
+configure_db_logging()
 
 # SQLAlchemy engine configuration
 engine = create_engine(
@@ -74,7 +103,7 @@ engine = create_engine(
     pool_size=10,
     max_overflow=20,
     pool_pre_ping=True,
-    echo=settings.debug,  # Log SQL queries in debug mode
+    echo=settings.db_echo,  # Control SQL query logging with separate setting
 )
 
 # Session factory
