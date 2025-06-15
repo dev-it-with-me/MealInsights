@@ -166,7 +166,6 @@ products_table = Table(
     Column("brand", String(100), nullable=True),
     Column("photo_data", sqlalchemy.LargeBinary, nullable=True),
     Column("shop", String(100), nullable=True),
-    Column("barcode", String(50), nullable=True),
     Column("calories_per_100g_or_ml", REAL, nullable=True),
     Column("macros_protein_g_per_100g_or_ml", REAL, nullable=True),
     Column("macros_carbohydrates_g_per_100g_or_ml", REAL, nullable=True),
@@ -236,8 +235,6 @@ product_ingredients_table = Table(
         ForeignKey("ingredients.id", ondelete="RESTRICT"),
         primary_key=True,
     ),
-    Column("quantity", REAL, nullable=False),
-    Column("unit", unit_enum_pg, nullable=False),
     sqlalchemy.CheckConstraint("quantity >= 0", name="ck_product_ingredients_quantity"),
 )
 
