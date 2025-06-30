@@ -167,9 +167,7 @@ const IngredientsList = ({
               <Table.Td>
                 {ingredient.photo_data ? (
                   <Image
-                    src={`data:image/jpeg;base64,${btoa(
-                      String.fromCharCode(...Array.from(ingredient.photo_data))
-                    )}`}
+                    src={`data:image/jpeg;base64,${ingredient.photo_data}`}
                     alt={ingredient.name}
                     w={40}
                     h={40}

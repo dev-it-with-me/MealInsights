@@ -45,6 +45,11 @@ class Settings(BaseSettings):
     db_password: str = Field(default="", alias="APP_DB_PASSWORD")
     db_port: int = Field(default=5432, alias="DB_PORT")
 
+    # Admin database settings (for database creation/management)
+    db_name_admin: str | None = Field(default=None, alias="DB_NAME_ADMIN")
+    db_user_admin: str | None = Field(default=None, alias="DB_USER_ADMIN")
+    db_password_admin: str | None = Field(default=None, alias="DB_PASSWORD_ADMIN")
+
     # Application settings
     app_name: str = Field(default="MealInsights")
     debug: bool = Field(default=True)

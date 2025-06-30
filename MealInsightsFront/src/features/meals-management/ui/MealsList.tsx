@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { 
   Card, 
   Group, 
@@ -9,7 +8,6 @@ import {
   Image, 
   Menu,
   ActionIcon,
-  Modal,
   SimpleGrid
 } from '@mantine/core';
 import { 

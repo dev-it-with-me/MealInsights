@@ -18,6 +18,7 @@ from fastapi.responses import JSONResponse
 from app.config import settings, create_all_tables
 from app.ingredients_and_products.routes import router as ingredients_products_router
 from app.meals.routes import router as meals_router
+from app.diet_planning.routes import router as diet_planning_router
 from app.ingredients_and_products.exceptions import (
     DatabaseError,
     DuplicateIngredientError,
@@ -264,7 +265,7 @@ async def root():
 app.include_router(ingredients_products_router, prefix="/api/v1")
 
 # Additional routers can be included here as they are implemented
-# app.include_router(diet_planning_router, prefix="/api/v1")
+app.include_router(diet_planning_router, prefix="/api/v1/diet-planning")
 app.include_router(meals_router, prefix="/api/v1")
 # app.include_router(shopping_router, prefix="/api/v1")
 # app.include_router(symptoms_router, prefix="/api/v1")

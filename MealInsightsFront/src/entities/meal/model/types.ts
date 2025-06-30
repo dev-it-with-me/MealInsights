@@ -2,7 +2,7 @@
  * Types for meal entities
  */
 
-import { DietTag, Macros, Unit } from '@/shared/lib/types';
+import type { DietTag, Macros, Unit } from '@/shared/lib/types';
 
 export interface MealIngredient {
     item_id: string;

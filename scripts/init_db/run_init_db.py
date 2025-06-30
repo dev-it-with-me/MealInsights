@@ -22,6 +22,8 @@ from sqlalchemy import (
     JSON,
     Boolean,
     Text,
+    Date,
+    Time,
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID, ENUM as PG_ENUM
 from sqlalchemy.exc import SQLAlchemyError
@@ -342,6 +344,44 @@ meal_tags_table = Table(
         primary_key=True,
     ),
     Column("tag", diet_tag_enum_pg, primary_key=True),
+)
+
+# --- Diet Planning Tables ---
+meal_assignments_table = Table(
+    "meal_assignments",
+    metadata,
+    Column(
+        "id",
+        PG_UUID(as_uuid=True),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+    ),
+    Column(
+        "meal_id",
+        PG_UUID(as_uuid=True),
+        ForeignKey("meals.id", ondelete="CASCADE"),
+        nullable=False,
+    ),
+    Column("meal_name", String(150), nullable=False),
+    Column("assignment_date", Date, nullable=False),
+    Column("meal_time", String(20), nullable=False),
+    Column("specific_time", Time, nullable=True),
+    Column("calories", REAL, nullable=True),
+    Column("notes", Text, nullable=True),
+    sqlalchemy.CheckConstraint(
+        "meal_time IN ('breakfast', 'lunch', 'dinner', 'snack')",
+        name="ck_meal_assignments_meal_time",
+    ),
+    sqlalchemy.CheckConstraint(
+        "calories IS NULL OR calories >= 0", name="ck_meal_assignments_calories"
+    ),
+    # Unique constraint to prevent duplicate assignments
+    sqlalchemy.UniqueConstraint(
+        "meal_id",
+        "assignment_date",
+        "meal_time",
+        name="uq_meal_assignments_meal_date_time",
+    ),
 )
 
 

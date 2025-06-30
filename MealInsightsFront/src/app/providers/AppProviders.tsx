@@ -9,6 +9,7 @@ import '@mantine/notifications/styles.css';
 // Pages
 import { ItemsManagementPage } from '@/pages/ingredients';
 import { ManageMealsPage } from '@/pages/meals';
+import { DietPlanningPage } from '@/pages/diet-planning';
 import MainLayout from '@/widgets/layout/MainLayout';
 
 const router = createBrowserRouter([
@@ -27,6 +28,10 @@ const router = createBrowserRouter([
       {
         path: 'meals/manage',
         element: <ManageMealsPage />,
+      },
+      {
+        path: 'diet-plan',
+        element: <DietPlanningPage />,
       },
     ],
   },
