@@ -13,6 +13,7 @@ import {
   IconHome, 
   IconLeaf, 
   IconList,
+  IconChefHat,
   IconCalendar,
   IconShoppingCart,
   IconChartLine
@@ -25,9 +26,10 @@ const MainLayout = () => {
   const navigationItems = [
     { icon: IconHome, label: 'Home', href: '/' },
     { icon: IconList, label: 'Ingredients & Products', href: '/ingredients' },
-    { icon: IconCalendar, label: 'Meal Planning', href: '/meals' },
-    { icon: IconShoppingCart, label: 'Shopping Lists', href: '/shopping' },
-    { icon: IconChartLine, label: 'Nutrition Tracking', href: '/tracking' },
+    { icon: IconChefHat, label: 'Manage Meals', href: '/meals/manage' },
+    { icon: IconCalendar, label: 'Diet Planning', href: '/diet-plan' },
+    { icon: IconShoppingCart, label: 'Shopping Lists', href: '/shopping-list' },
+    { icon: IconChartLine, label: 'Dashboard', href: '/dashboard' },
   ];
 
   const isActive = (href: string) => {

@@ -16,7 +16,7 @@ import {
   Image,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 import { Modal } from '@/shared/ui';
 import { DietTagEnum } from '@/shared/lib/types';
@@ -157,7 +157,63 @@ const AddEditIngredientForm = ({
         fileInputRef.current.value = '';
       }
     }
-  }, [isOpen, ingredient, editingMode, reset]);
+  }, [isOpen, ingredient?.id, editingMode]); // Removed reset and use ingredient.id instead of whole ingredient object
+
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setSelectedPhoto(file);
+    setPhotoRemoved(false); // Clear photo removal state when new file is selected
+    
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPreviewUrl(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setPreviewUrl(null);
+    }
+  }, []);
+
+  const handleRemovePhoto = useCallback(() => {
+    if (editingMode && ingredient && (ingredient.photo_url || ingredient.photo_data)) {
+      // Editing mode: mark existing photo for removal
+      setPhotoRemoved(true);
+      setPreviewUrl(null);
+      setSelectedPhoto(null);
+    } else {
+      // Create mode or no existing photo: just clear current selection
+      setSelectedPhoto(null);
+      setPreviewUrl(null);
+      setPhotoRemoved(false); // Clear photo removal state
+    }
+    
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }, [editingMode, ingredient]);
+
+  const handleKeepExistingPhoto = useCallback(() => {
+    setPhotoRemoved(false);
+    if (ingredient?.photo_url) {
+      setPreviewUrl(ingredient.photo_url);
+    } else if (ingredient?.photo_data && isValidPhotoData(ingredient.photo_data)) {
+      setPreviewUrl(createImageDataUrl(ingredient.photo_data));
+    }
+    setSelectedPhoto(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }, [ingredient]);
+
+  const handleRemoveNewPhoto = useCallback(() => {
+    setSelectedPhoto(null);
+    setPreviewUrl(null);
+    setPhotoRemoved(false); // Clear photo removal state
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }, []);
 
   const handleFormSubmit = async (data: IngredientCreateInput | IngredientUpdateInput) => {
     setIsSubmitting(true);
@@ -296,10 +352,7 @@ const AddEditIngredientForm = ({
                     variant="outline"
                     color="red"
                     size="xs"
-                    onClick={() => {
-                      setPhotoRemoved(true);
-                      setPreviewUrl(null);
-                    }}
+                    onClick={handleRemovePhoto}
                   >
                     Remove Photo
                   </Button>
@@ -317,15 +370,7 @@ const AddEditIngredientForm = ({
                   variant="outline"
                   color="blue"
                   size="xs"
-                  onClick={() => {
-                    setPhotoRemoved(false);
-                    // Restore preview URL for existing photo
-                    if (ingredient?.photo_url) {
-                      setPreviewUrl(ingredient.photo_url);
-                    } else if (ingredient?.photo_data && isValidPhotoData(ingredient.photo_data)) {
-                      setPreviewUrl(createImageDataUrl(ingredient.photo_data));
-                    }
-                  }}
+                  onClick={handleKeepExistingPhoto}
                 >
                   Undo Remove
                 </Button>
@@ -353,21 +398,7 @@ const AddEditIngredientForm = ({
               ref={fileInputRef}
               type="file"
               accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files?.[0] || null;
-                setSelectedPhoto(file);
-                setPhotoRemoved(false); // Clear photo removal state when new file is selected
-                
-                if (file) {
-                  const reader = new FileReader();
-                  reader.onload = (e) => {
-                    setPreviewUrl(e.target?.result as string);
-                  };
-                  reader.readAsDataURL(file);
-                } else {
-                  setPreviewUrl(null);
-                }
-              }}
+              onChange={handleFileChange}
               style={{
                 width: '100%',
                 padding: '8px',
@@ -385,14 +416,7 @@ const AddEditIngredientForm = ({
                 Selected: {selectedPhoto.name}
                 <button
                   type="button"
-                  onClick={() => {
-                    setSelectedPhoto(null);
-                    setPreviewUrl(null);
-                    setPhotoRemoved(false); // Clear photo removal state
-                    if (fileInputRef.current) {
-                      fileInputRef.current.value = '';
-                    }
-                  }}
+                  onClick={handleRemoveNewPhoto}
                   style={{
                     marginLeft: '8px',
                     padding: '2px 6px',

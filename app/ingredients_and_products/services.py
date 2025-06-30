@@ -492,7 +492,6 @@ class ProductService:
             raise ValueError("Package size must be positive")
 
         tags_from_ingredients: list[DietTagEnum] = []
-        print("ingredients", ingredients)
         if ingredients is not None:
             for ingredient in ingredients:
                 tags_from_ingredients.extend(ingredient.tags)

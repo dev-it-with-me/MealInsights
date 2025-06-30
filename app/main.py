@@ -17,6 +17,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings, create_all_tables
 from app.ingredients_and_products.routes import router as ingredients_products_router
+from app.meals.routes import router as meals_router
 from app.ingredients_and_products.exceptions import (
     DatabaseError,
     DuplicateIngredientError,
@@ -25,6 +26,11 @@ from app.ingredients_and_products.exceptions import (
     IngredientsProductsBaseException,
     InvalidQuantityError,
     ProductNotFoundError,
+)
+from app.meals.exceptions import (
+    MealNotFoundError,
+    MealValidationError,
+    MealIngredientNotFoundError,
 )
 
 # Configure logging
@@ -189,6 +195,39 @@ async def general_error_handler(
     )
 
 
+# Specific exception handlers for meals module
+@app.exception_handler(MealNotFoundError)
+async def meal_not_found_handler(request: Request, exc: MealNotFoundError):
+    """Handle meal not found errors."""
+    logger.warning(f"Meal not found: {exc}")
+    return JSONResponse(
+        status_code=404,
+        content={"detail": str(exc), "error_type": "MealNotFoundError"},
+    )
+
+
+@app.exception_handler(MealValidationError)
+async def meal_validation_handler(request: Request, exc: MealValidationError):
+    """Handle meal validation errors."""
+    logger.warning(f"Meal validation error: {exc}")
+    return JSONResponse(
+        status_code=400,
+        content={"detail": str(exc), "error_type": "MealValidationError"},
+    )
+
+
+@app.exception_handler(MealIngredientNotFoundError)
+async def meal_ingredient_not_found_handler(
+    request: Request, exc: MealIngredientNotFoundError
+):
+    """Handle meal ingredient not found errors."""
+    logger.warning(f"Meal ingredient not found: {exc}")
+    return JSONResponse(
+        status_code=404,
+        content={"detail": str(exc), "error_type": "MealIngredientNotFoundError"},
+    )
+
+
 # Health check endpoint
 @app.get("/health", tags=["health"])
 async def health_check():
@@ -226,7 +265,7 @@ app.include_router(ingredients_products_router, prefix="/api/v1")
 
 # Additional routers can be included here as they are implemented
 # app.include_router(diet_planning_router, prefix="/api/v1")
-# app.include_router(meals_router, prefix="/api/v1")
+app.include_router(meals_router, prefix="/api/v1")
 # app.include_router(shopping_router, prefix="/api/v1")
 # app.include_router(symptoms_router, prefix="/api/v1")
 

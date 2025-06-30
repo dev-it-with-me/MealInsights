@@ -40,6 +40,10 @@ export type DietTag = typeof DietTagEnum[keyof typeof DietTagEnum];
 export const UnitEnum = {
     GRAM: "g",
     MILLILITER: "ml",
+    PIECE: "piece",
+    CUP: "cup",
+    TABLESPOON: "tablespoon",
+    TEASPOON: "teaspoon",
 } as const;
 export type Unit = typeof UnitEnum[keyof typeof UnitEnum];
 

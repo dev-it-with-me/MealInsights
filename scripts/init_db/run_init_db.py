@@ -20,8 +20,11 @@ from sqlalchemy import (
     REAL,
     ForeignKey,
     JSON,
+    Boolean,
+    Text,
 )
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID, ENUM as PG_ENUM
+from sqlalchemy.exc import SQLAlchemyError
 
 # --- Import Database Configuration ---
 from .db_config import (
@@ -238,6 +241,109 @@ product_ingredients_table = Table(
     sqlalchemy.CheckConstraint("quantity >= 0", name="ck_product_ingredients_quantity"),
 )
 
+# --- Meals Tables ---
+meals_table = Table(
+    "meals",
+    metadata,
+    Column(
+        "id",
+        PG_UUID(as_uuid=True),
+        primary_key=True,
+        server_default=text("gen_random_uuid()"),
+    ),
+    Column("name", String(150), nullable=False),
+    Column("photo_data", sqlalchemy.LargeBinary, nullable=True),
+    Column("recipe", Text, nullable=True),
+    Column("calories_total", REAL, nullable=True),
+    Column("macros_protein_g", REAL, nullable=True),
+    Column("macros_carbohydrates_g", REAL, nullable=True),
+    Column("macros_sugar_g", REAL, nullable=True),
+    Column("macros_fat_g", REAL, nullable=True),
+    Column("macros_fiber_g", REAL, nullable=True),
+    Column("macros_saturated_fat_g", REAL, nullable=True),
+    Column(
+        "is_nutrition_calculated", Boolean, nullable=False, server_default=text("false")
+    ),
+    sqlalchemy.CheckConstraint(
+        "calories_total IS NULL OR calories_total >= 0", name="ck_meals_calories"
+    ),
+    sqlalchemy.CheckConstraint(
+        "macros_protein_g IS NULL OR macros_protein_g >= 0", name="ck_meals_protein"
+    ),
+    sqlalchemy.CheckConstraint(
+        "macros_carbohydrates_g IS NULL OR macros_carbohydrates_g >= 0",
+        name="ck_meals_carbs",
+    ),
+    sqlalchemy.CheckConstraint(
+        "macros_sugar_g IS NULL OR macros_sugar_g >= 0", name="ck_meals_sugar"
+    ),
+    sqlalchemy.CheckConstraint(
+        "macros_fat_g IS NULL OR macros_fat_g >= 0", name="ck_meals_fat"
+    ),
+    sqlalchemy.CheckConstraint(
+        "macros_fiber_g IS NULL OR macros_fiber_g >= 0", name="ck_meals_fiber"
+    ),
+    sqlalchemy.CheckConstraint(
+        "macros_saturated_fat_g IS NULL OR macros_saturated_fat_g >= 0",
+        name="ck_meals_saturated_fat",
+    ),
+)
+
+meal_ingredients_table = Table(
+    "meal_ingredients",
+    metadata,
+    Column(
+        "meal_id",
+        PG_UUID(as_uuid=True),
+        ForeignKey("meals.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+    Column("item_id", PG_UUID(as_uuid=True), primary_key=True),
+    Column("item_type", String(20), nullable=False, primary_key=True),
+    Column("item_name", String(150), nullable=False),
+    Column("quantity", REAL, nullable=False),
+    Column("unit", unit_enum_pg, nullable=False),
+    sqlalchemy.CheckConstraint("quantity > 0", name="ck_meal_ingredients_quantity"),
+    sqlalchemy.CheckConstraint(
+        "item_type IN ('ingredient', 'product')", name="ck_meal_ingredients_item_type"
+    ),
+)
+
+meal_ingredient_equivalents_table = Table(
+    "meal_ingredient_equivalents",
+    metadata,
+    Column(
+        "meal_id",
+        PG_UUID(as_uuid=True),
+        ForeignKey("meals.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+    Column("original_item_id", PG_UUID(as_uuid=True), primary_key=True),
+    Column("equivalent_item_id", PG_UUID(as_uuid=True), primary_key=True),
+    Column("equivalent_item_type", String(20), nullable=False),
+    Column("equivalent_item_name", String(150), nullable=False),
+    Column("conversion_ratio", REAL, nullable=False, server_default=text("1.0")),
+    sqlalchemy.CheckConstraint(
+        "conversion_ratio > 0", name="ck_meal_equivalents_ratio"
+    ),
+    sqlalchemy.CheckConstraint(
+        "equivalent_item_type IN ('ingredient', 'product')",
+        name="ck_meal_equivalents_item_type",
+    ),
+)
+
+meal_tags_table = Table(
+    "meal_tags",
+    metadata,
+    Column(
+        "meal_id",
+        PG_UUID(as_uuid=True),
+        ForeignKey("meals.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+    Column("tag", diet_tag_enum_pg, primary_key=True),
+)
+
 
 def get_db_connection(dbname, user, password, host=DB_HOST):
     """Establishes a connection to the PostgreSQL database (using psycopg2)."""
@@ -400,7 +506,7 @@ def main():
 
     except psycopg2.Error as e:
         print(f"A psycopg2 database error occurred: {e}")
-    except sqlalchemy.exc.SQLAlchemyError as e:
+    except SQLAlchemyError as e:
         print(f"A SQLAlchemy error occurred: {e}")
         if (
             "password authentication failed" in str(e).lower()

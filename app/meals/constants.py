@@ -1,0 +1,20 @@
+"""
+Constants for the meals module.
+"""
+
+# Default values
+DEFAULT_SERVING_SIZE_G = 100
+DEFAULT_MEAL_CALORIES = 0
+
+# Validation limits
+MAX_MEAL_NAME_LENGTH = 150
+MIN_MEAL_NAME_LENGTH = 1
+MAX_RECIPE_LENGTH = 5000
+MAX_INGREDIENTS_PER_MEAL = 20
+MAX_EQUIVALENTS_PER_INGREDIENT = 10
+
+# Units
+VALID_UNITS = ["g", "ml"]
+
+# Nutrition calculation precision
+NUTRITION_DECIMAL_PLACES = 2
