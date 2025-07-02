@@ -3,6 +3,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import { ModalsProvider } from '@mantine/modals';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 
@@ -10,6 +11,7 @@ import '@mantine/notifications/styles.css';
 import { ItemsManagementPage } from '@/pages/ingredients';
 import { ManageMealsPage } from '@/pages/meals';
 import { DietPlanningPage } from '@/pages/diet-planning';
+import { ShoppingListPage } from '@/pages/shopping-list';
 import MainLayout from '@/widgets/layout/MainLayout';
 
 const router = createBrowserRouter([
@@ -33,18 +35,34 @@ const router = createBrowserRouter([
         path: 'diet-plan',
         element: <DietPlanningPage />,
       },
+      {
+        path: 'shopping-list',
+        element: <ShoppingListPage />,
+      },
     ],
   },
 ]);
 
+// Create query client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 2,
+    },
+  },
+});
+
 const AppProviders: React.FC = () => {
   return (
-    <MantineProvider>
-      <ModalsProvider>
-        <Notifications position="top-right" />
-        <RouterProvider router={router} />
-      </ModalsProvider>
-    </MantineProvider>
+    <QueryClientProvider client={queryClient}>
+      <MantineProvider>
+        <ModalsProvider>
+          <Notifications position="top-right" />
+          <RouterProvider router={router} />
+        </ModalsProvider>
+      </MantineProvider>
+    </QueryClientProvider>
   );
 };
 

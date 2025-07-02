@@ -139,7 +139,7 @@ export const MealAssignmentPanel = ({
                 </Alert>
             ) : (
                 <Card p="sm" withBorder>
-                    <Stack spacing="xs">
+                    <Stack gap="xs">
                         <Group justify="space-between">
                             <Text size="sm" fw={500}>
                                 Daily Totals
@@ -149,7 +149,7 @@ export const MealAssignmentPanel = ({
                             </Badge>
                         </Group>
 
-                        <Group spacing="xs">
+                        <Group gap="xs">
                             <Badge variant="light" color="green">
                                 {Math.round(dayPlan?.total_protein || 0)} g protein
                             </Badge>
