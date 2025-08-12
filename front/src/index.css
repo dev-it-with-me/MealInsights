@@ -1,0 +1,14 @@
+@import 'tailwindcss';
+
+/* Skeleton core and presets */
+@import '@skeletonlabs/skeleton';
+@import '@skeletonlabs/skeleton/optional/presets';
+
+/* Register custom theme */
+@import '../dev-it-theme.css';
+
+/* Force dark mode base */
+html, body, #root {
+	background-color: var(--body-background-color-dark);
+	color: var(--base-font-color-dark);
+}
