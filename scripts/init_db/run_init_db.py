@@ -29,17 +29,32 @@ from sqlalchemy.dialects.postgresql import UUID as PG_UUID, ENUM as PG_ENUM
 from sqlalchemy.exc import SQLAlchemyError
 
 # --- Import Database Configuration ---
-from .db_config import (
-    DB_HOST,
-    DB_NAME_ADMIN,
-    DB_USER_ADMIN,
-    DB_PASSWORD_ADMIN,
-    APP_DB_NAME,
-    APP_DB_USER,
-    APP_DB_PASSWORD,
-    APP_DB_URL as SQLALCHEMY_DATABASE_URL_APP,  # Use APP_DB_URL directly
-    # get_admin_db_url # This can be imported if/when engine_admin is used
-)
+try:
+    # Try relative import first (when script is run as a module)
+    from .db_config import (
+        DB_HOST,
+        DB_NAME_ADMIN,
+        DB_USER_ADMIN,
+        DB_PASSWORD_ADMIN,
+        APP_DB_NAME,
+        APP_DB_USER,
+        APP_DB_PASSWORD,
+        APP_DB_URL as SQLALCHEMY_DATABASE_URL_APP,  # Use APP_DB_URL directly
+        # get_admin_db_url # This can be imported if/when engine_admin is used
+    )
+except ImportError:
+    # Fallback to direct import when script is run directly
+    from db_config import (
+        DB_HOST,
+        DB_NAME_ADMIN,
+        DB_USER_ADMIN,
+        DB_PASSWORD_ADMIN,
+        APP_DB_NAME,
+        APP_DB_USER,
+        APP_DB_PASSWORD,
+        APP_DB_URL as SQLALCHEMY_DATABASE_URL_APP,  # Use APP_DB_URL directly
+        # get_admin_db_url # This can be imported if/when engine_admin is used
+    )
 
 # SQLAlchemy metadata object
 metadata = MetaData()
@@ -240,6 +255,7 @@ product_ingredients_table = Table(
         ForeignKey("ingredients.id", ondelete="RESTRICT"),
         primary_key=True,
     ),
+    Column("quantity", REAL, nullable=False),
     sqlalchemy.CheckConstraint("quantity >= 0", name="ck_product_ingredients_quantity"),
 )
 
