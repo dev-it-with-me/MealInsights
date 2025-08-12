@@ -6,7 +6,7 @@ from typing import List
 import uuid
 from datetime import date, timedelta
 from app.meals.repositories import MealRepository
-from .models import MealAssignment, DayPlan, WeekPlan
+from .models import MealAssignment, WeekPlan
 from .repositories import DietPlanningRepository
 from .schemas import (
     MealAssignmentSchema,
@@ -16,9 +16,7 @@ from .schemas import (
     DateRangeRequestSchema,
 )
 from .exceptions import (
-    MealAssignmentValidationError,
     MealNotFoundForAssignmentError,
-    MealAssignmentNotFoundError,
 )
 
 

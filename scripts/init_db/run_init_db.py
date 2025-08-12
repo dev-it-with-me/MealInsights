@@ -537,6 +537,7 @@ def main():
 
         # Test connection before proceeding
         with engine_app.connect() as connection:
+            connection.execute(text("SELECT 1;"))
             print(f"Successfully connected to {APP_DB_NAME} with SQLAlchemy.")
 
         create_enum_types_sqlalchemy(engine_app)

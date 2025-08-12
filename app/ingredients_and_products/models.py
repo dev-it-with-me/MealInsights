@@ -5,7 +5,7 @@ This module contains the models for the ingredients and products.
 from pydantic import BaseModel, Field
 import uuid
 from app.models import Macros
-from app.enums import DietTagEnum, UnitEnum  # Re-added UnitEnum
+from app.enums import DietTagEnum  # Re-added UnitEnum
 
 
 class Ingredient(BaseModel):
