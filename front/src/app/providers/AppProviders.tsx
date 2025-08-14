@@ -1,37 +1,42 @@
-import React from 'react';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import React from "react";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Pages
-import { ItemsManagementPage } from '@/pages/ingredients';
-import { ManageMealsPage } from '@/pages/meals';
-import { DietPlanningPage } from '@/pages/diet-planning';
-import { ShoppingListPage } from '@/pages/shopping-list';
-import MainLayout from '@/widgets/layout/MainLayout';
+import { ItemsManagementPage } from "@/pages/ingredients";
+import { ManageMealsPage } from "@/pages/meals";
+import { DietPlanningPage } from "@/pages/diet-planning";
+import { ShoppingListPage } from "@/pages/shopping-list";
+import { DashboardPage } from "@/pages/home";
+import MainLayout from "@/widgets/layout/MainLayout";
 
 const router = createBrowserRouter([
   {
-    path: '/',
+    path: "/",
     element: <MainLayout />,
     children: [
       {
         index: true,
-        element: <div>Welcome to MealInsights</div>, // Temporary home page
+        element: <DashboardPage />,
       },
       {
-        path: 'ingredients',
+        path: "dashboard",
+        element: <DashboardPage />,
+      },
+      {
+        path: "ingredients",
         element: <ItemsManagementPage />,
       },
       {
-        path: 'meals/manage',
+        path: "meals/manage",
         element: <ManageMealsPage />,
       },
       {
-        path: 'diet-plan',
+        path: "diet-plan",
         element: <DietPlanningPage />,
       },
       {
-        path: 'shopping-list',
+        path: "shopping-list",
         element: <ShoppingListPage />,
       },
     ],
@@ -51,7 +56,7 @@ const queryClient = new QueryClient({
 const AppProviders: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
-  <RouterProvider router={router} />
+      <RouterProvider router={router} />
     </QueryClientProvider>
   );
 };

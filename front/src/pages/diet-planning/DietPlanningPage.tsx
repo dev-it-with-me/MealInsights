@@ -1,37 +1,38 @@
-import { useState } from 'react';
-import { Container, Grid, Paper, Title, Group, Text } from '@/shared/ui-kit';
-import { IconCalendar } from '@tabler/icons-react';
-import dayjs from 'dayjs';
-import { CalendarView } from './CalendarView';
-import { DateRangeSelector } from './DateRangeSelector';
-import { MealAssignmentPanel } from './MealAssignmentPanel';
+import { useState } from "react";
+import { Container, Grid, Paper, Text } from "@/shared/ui-kit";
+import { IconCalendar } from "@tabler/icons-react";
+import { PageHeader } from "@/shared/ui";
+import dayjs from "dayjs";
+import { CalendarView } from "./CalendarView";
+import { DateRangeSelector } from "./DateRangeSelector";
+import { MealAssignmentPanel } from "./MealAssignmentPanel";
 
-export type ViewMode = 'day' | 'week' | 'range';
+export type ViewMode = "day" | "week" | "range";
 
 export interface DietPlanningPageProps {}
 
 export const DietPlanningPage = ({}: DietPlanningPageProps) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [viewMode, setViewMode] = useState<ViewMode>('week');
+  const [viewMode, setViewMode] = useState<ViewMode>("week");
   const [dateRange, setDateRange] = useState({
-    startDate: dayjs().startOf('week').toDate(),
-    endDate: dayjs().endOf('week').toDate(),
+    startDate: dayjs().startOf("week").toDate(),
+    endDate: dayjs().endOf("week").toDate(),
   });
 
   const handleViewModeChange = (mode: ViewMode) => {
     setViewMode(mode);
-    
+
     // Update date range based on view mode
     const today = dayjs();
-    if (mode === 'day') {
+    if (mode === "day") {
       setDateRange({
         startDate: selectedDate,
         endDate: selectedDate,
       });
-    } else if (mode === 'week') {
+    } else if (mode === "week") {
       setDateRange({
-        startDate: today.startOf('week').toDate(),
-        endDate: today.endOf('week').toDate(),
+        startDate: today.startOf("week").toDate(),
+        endDate: today.endOf("week").toDate(),
       });
     }
     // For 'range' mode, keep current selection
@@ -43,57 +44,90 @@ export const DietPlanningPage = ({}: DietPlanningPageProps) => {
   };
 
   return (
-    <Container size="xl" py="md">
-      <Group justify="space-between" mb="lg">
-        <Title order={1} size="h2">
-          Diet Planning
-        </Title>
-        <Group gap="xs">
-          <IconCalendar size={16} />
-          <Text size="sm">
-            {dayjs(selectedDate).format('dddd, MMMM D, YYYY')}
-          </Text>
-        </Group>
-      </Group>
-
-      {/* Date Range Selector */}
-      <Paper p="md" withBorder mb="lg">
-        <DateRangeSelector
-          viewMode={viewMode}
-          dateRange={dateRange}
-          onViewModeChange={handleViewModeChange}
-          onDateRangeChange={handleDateRangeChange}
+    <div>
+      <Container size="xl">
+        <PageHeader
+          icon={IconCalendar}
+          title="Diet Planning"
+          description="Plan your meals, manage your diet, and track your nutrition"
+          rightContent={
+            <Text size="sm" style={{ color: "var(--color-surface-300)" }}>
+              {dayjs(selectedDate).format("dddd, MMMM D, YYYY")}
+            </Text>
+          }
         />
-      </Paper>
 
-      <Grid>
-        {/* Left Panel - Calendar View */}
-        <Grid.Col span={{ base: 12, md: 8 }}>
-          <Paper p="md" withBorder h="600px" style={{ overflow: 'hidden' }}>
-            <CalendarView
-              viewMode={viewMode}
-              selectedDate={selectedDate}
-              dateRange={dateRange}
-              onDateSelect={setSelectedDate}
-            />
-          </Paper>
-        </Grid.Col>
+        {/* Date Range Selector */}
+        <Paper
+          p="lg"
+          mb="lg"
+          style={{
+            backgroundColor: "var(--color-surface-900)",
+            border: "1px solid var(--color-surface-800)",
+            borderRadius: "12px",
+            boxShadow:
+              "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+          }}
+        >
+          <DateRangeSelector
+            viewMode={viewMode}
+            dateRange={dateRange}
+            onViewModeChange={handleViewModeChange}
+            onDateRangeChange={handleDateRangeChange}
+          />
+        </Paper>
 
-        {/* Right Panel - Meal Assignment */}
-        <Grid.Col span={{ base: 12, md: 4 }}>
-          <Paper withBorder h="600px" style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ flex: 1, overflow: 'auto', padding: '1rem' }}>
-              <MealAssignmentPanel
+        <Grid>
+          {/* Left Panel - Calendar View */}
+          <Grid.Col span={{ base: 12, md: 8 }}>
+            <Paper
+              p="lg"
+              h="600px"
+              style={{
+                overflow: "hidden",
+                backgroundColor: "var(--color-surface-900)",
+                border: "1px solid var(--color-surface-800)",
+                borderRadius: "12px",
+                boxShadow:
+                  "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+              }}
+            >
+              <CalendarView
+                viewMode={viewMode}
                 selectedDate={selectedDate}
-                onMealAssigned={() => {
-                  // Meal assignment completed - could trigger calendar refresh if needed
-                  console.log('Meal assigned successfully');
-                }}
+                dateRange={dateRange}
+                onDateSelect={setSelectedDate}
               />
-            </div>
-          </Paper>
-        </Grid.Col>
-      </Grid>
-    </Container>
+            </Paper>
+          </Grid.Col>
+
+          {/* Right Panel - Meal Assignment */}
+          <Grid.Col span={{ base: 12, md: 4 }}>
+            <Paper
+              h="600px"
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                backgroundColor: "var(--color-surface-900)",
+                border: "1px solid var(--color-surface-800)",
+                borderRadius: "12px",
+                boxShadow:
+                  "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+              }}
+            >
+              <div style={{ flex: 1, overflow: "auto", padding: "1.5rem" }}>
+                <MealAssignmentPanel
+                  selectedDate={selectedDate}
+                  onMealAssigned={() => {
+                    // Meal assignment completed - could trigger calendar refresh if needed
+                    console.log("Meal assigned successfully");
+                  }}
+                />
+              </div>
+            </Paper>
+          </Grid.Col>
+        </Grid>
+      </Container>
+    </div>
   );
 };

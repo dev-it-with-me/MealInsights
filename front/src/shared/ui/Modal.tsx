@@ -23,7 +23,7 @@ const Modal = ({ children, isOpen, opened, ...props }: ModalProps) => {
   const actualOpened = isOpen !== undefined ? isOpen : opened;
   return (
   <KitModal
-      size="lg"
+      size="xl"
       // Our shim accepts boolean | undefined; ensure boolean
       opened={!!actualOpened}
       onClose={props.onClose ?? (() => {})}

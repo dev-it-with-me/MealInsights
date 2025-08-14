@@ -2,8 +2,8 @@
  * Form C1000.AddEditIngredientForm
  * Allows input/edit of ingredient details (name, photo, shop, calories, macros, tags)
  */
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   TextInput,
   NumberInput,
@@ -13,26 +13,26 @@ import {
   Divider,
   Button,
   Image,
-} from '@/shared/ui-kit';
-import { notifications } from '@/shared/ui-kit';
-import { useState, useEffect, useRef, useCallback } from 'react';
-
-import { Modal } from '@/shared/ui';
-import { DietTagEnum } from '@/shared/lib/types';
-import type { DietTag } from '@/shared/lib/types';
-import { createImageDataUrl, isValidPhotoData } from '@/shared/lib/imageUtils';
-import { 
-  ingredientCreateSchema, 
+  NutritionGrid,
+  Modal,
+} from "@/shared/ui-kit";
+import { notifications } from "@/shared/ui-kit";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { DietTagEnum } from "@/shared/lib/types";
+import type { DietTag } from "@/shared/lib/types";
+import { createImageDataUrl, isValidPhotoData } from "@/shared/lib/imageUtils";
+import {
+  ingredientCreateSchema,
   ingredientUpdateSchema,
   type IngredientCreateInput,
-  type IngredientUpdateInput 
-} from '@/entities/ingredient/lib/schemas';
-import { ingredientApi } from '@/entities/ingredient/api/ingredientApi';
-import type { 
+  type IngredientUpdateInput,
+} from "@/entities/ingredient/lib/schemas";
+import { ingredientApi } from "@/entities/ingredient/api/ingredientApi";
+import type {
   Ingredient,
   CreateIngredientRequest,
-  UpdateIngredientRequest 
-} from '@/entities/ingredient/model/types';
+  UpdateIngredientRequest,
+} from "@/entities/ingredient/model/types";
 
 interface AddEditIngredientFormProps {
   isOpen: boolean;
@@ -43,9 +43,9 @@ interface AddEditIngredientFormProps {
   onSuccess?: () => void;
 }
 
-const dietTagOptions = Object.values(DietTagEnum).map(tag => ({
+const dietTagOptions = Object.values(DietTagEnum).map((tag) => ({
   value: tag,
-  label: tag.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+  label: tag.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase()),
 }));
 
 const AddEditIngredientForm = ({
@@ -54,7 +54,7 @@ const AddEditIngredientForm = ({
   onSubmit,
   ingredient,
   isEditing,
-  onSuccess
+  onSuccess,
 }: AddEditIngredientFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
@@ -64,7 +64,7 @@ const AddEditIngredientForm = ({
   const editingMode = isEditing ?? !!ingredient;
 
   const schema = editingMode ? ingredientUpdateSchema : ingredientCreateSchema;
-  
+
   const {
     register,
     handleSubmit,
@@ -72,40 +72,42 @@ const AddEditIngredientForm = ({
     watch,
     reset,
     control,
-    formState: { errors }
+    formState: { errors },
   } = useForm<IngredientCreateInput | IngredientUpdateInput>({
     resolver: zodResolver(schema),
-    defaultValues: editingMode ? {
-      name: ingredient?.name || '',
-      shops: ingredient?.shops || [],
-      calories_per_100g_or_ml: ingredient?.calories_per_100g_or_ml || 0,
-      macros_per_100g_or_ml: ingredient?.macros_per_100g_or_ml || {
-        protein: 0,
-        carbohydrates: 0,
-        fat: 0,
-        sugar: 0,
-        fiber: 0,
-        saturated_fat: 0
-      },
-      tags: ingredient?.tags || []
-    } : {
-      name: '',
-      shops: [],
-      calories_per_100g_or_ml: 0,
-      macros_per_100g_or_ml: {
-        protein: 0,
-        carbohydrates: 0,
-        fat: 0,
-        sugar: 0,
-        fiber: 0,
-        saturated_fat: 0
-      },
-      tags: []
-    }
+    defaultValues: editingMode
+      ? {
+          name: ingredient?.name || "",
+          shops: ingredient?.shops || [],
+          calories_per_100g_or_ml: ingredient?.calories_per_100g_or_ml || 0,
+          macros_per_100g_or_ml: ingredient?.macros_per_100g_or_ml || {
+            protein: 0,
+            carbohydrates: 0,
+            fat: 0,
+            sugar: 0,
+            fiber: 0,
+            saturated_fat: 0,
+          },
+          tags: ingredient?.tags || [],
+        }
+      : {
+          name: "",
+          shops: [],
+          calories_per_100g_or_ml: 0,
+          macros_per_100g_or_ml: {
+            protein: 0,
+            carbohydrates: 0,
+            fat: 0,
+            sugar: 0,
+            fiber: 0,
+            saturated_fat: 0,
+          },
+          tags: [],
+        },
   });
 
-  const watchedTags = watch('tags') || [];
-  const watchedShops = watch('shops') || [];
+  const watchedTags = watch("tags") || [];
+  const watchedShops = watch("shops") || [];
 
   useEffect(() => {
     if (isOpen && ingredient && editingMode) {
@@ -114,29 +116,37 @@ const AddEditIngredientForm = ({
         shops: ingredient.shops || [],
         calories_per_100g_or_ml: ingredient.calories_per_100g_or_ml,
         macros_per_100g_or_ml: ingredient.macros_per_100g_or_ml,
-        tags: ingredient.tags
+        tags: ingredient.tags,
       });
       setSelectedPhoto(null);
       setPhotoRemoved(false); // Reset photo removal state
-      
+
       // Set preview URL for existing photo
       if (ingredient.photo_url) {
         setPreviewUrl(ingredient.photo_url);
-        console.log('useEffect (editing): Setting previewUrl from photo_url:', ingredient.photo_url);
-      } else if (ingredient.photo_data && isValidPhotoData(ingredient.photo_data)) {
+        console.log(
+          "useEffect (editing): Setting previewUrl from photo_url:",
+          ingredient.photo_url
+        );
+      } else if (
+        ingredient.photo_data &&
+        isValidPhotoData(ingredient.photo_data)
+      ) {
         setPreviewUrl(createImageDataUrl(ingredient.photo_data));
-        console.log('useEffect (editing): Setting previewUrl from photo_data');
+        console.log("useEffect (editing): Setting previewUrl from photo_data");
       } else {
         setPreviewUrl(null);
-        console.log('useEffect (editing): No existing photo, setting previewUrl to null');
+        console.log(
+          "useEffect (editing): No existing photo, setting previewUrl to null"
+        );
       }
-      
+
       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        fileInputRef.current.value = "";
       }
     } else if (isOpen && !editingMode) {
       reset({
-        name: '',
+        name: "",
         shops: [],
         calories_per_100g_or_ml: 0,
         macros_per_100g_or_ml: {
@@ -145,37 +155,44 @@ const AddEditIngredientForm = ({
           fat: 0,
           sugar: 0,
           fiber: 0,
-          saturated_fat: 0
+          saturated_fat: 0,
         },
-        tags: []
+        tags: [],
       });
       setSelectedPhoto(null);
       setPreviewUrl(null);
       setPhotoRemoved(false); // Reset photo removal state
       if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+        fileInputRef.current.value = "";
       }
     }
   }, [isOpen, ingredient?.id, editingMode]); // Removed reset and use ingredient.id instead of whole ingredient object
 
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setSelectedPhoto(file);
-    setPhotoRemoved(false); // Clear photo removal state when new file is selected
-    
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setPreviewUrl(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setPreviewUrl(null);
-    }
-  }, []);
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0] || null;
+      setSelectedPhoto(file);
+      setPhotoRemoved(false); // Clear photo removal state when new file is selected
+
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setPreviewUrl(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        setPreviewUrl(null);
+      }
+    },
+    []
+  );
 
   const handleRemovePhoto = useCallback(() => {
-    if (editingMode && ingredient && (ingredient.photo_url || ingredient.photo_data)) {
+    if (
+      editingMode &&
+      ingredient &&
+      (ingredient.photo_url || ingredient.photo_data)
+    ) {
       // Editing mode: mark existing photo for removal
       setPhotoRemoved(true);
       setPreviewUrl(null);
@@ -186,9 +203,9 @@ const AddEditIngredientForm = ({
       setPreviewUrl(null);
       setPhotoRemoved(false); // Clear photo removal state
     }
-    
+
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   }, [editingMode, ingredient]);
 
@@ -196,12 +213,15 @@ const AddEditIngredientForm = ({
     setPhotoRemoved(false);
     if (ingredient?.photo_url) {
       setPreviewUrl(ingredient.photo_url);
-    } else if (ingredient?.photo_data && isValidPhotoData(ingredient.photo_data)) {
+    } else if (
+      ingredient?.photo_data &&
+      isValidPhotoData(ingredient.photo_data)
+    ) {
       setPreviewUrl(createImageDataUrl(ingredient.photo_data));
     }
     setSelectedPhoto(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   }, [ingredient]);
 
@@ -210,11 +230,13 @@ const AddEditIngredientForm = ({
     setPreviewUrl(null);
     setPhotoRemoved(false); // Clear photo removal state
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   }, []);
 
-  const handleFormSubmit = async (data: IngredientCreateInput | IngredientUpdateInput) => {
+  const handleFormSubmit = async (
+    data: IngredientCreateInput | IngredientUpdateInput
+  ) => {
     setIsSubmitting(true);
     try {
       const baseData = {
@@ -222,54 +244,80 @@ const AddEditIngredientForm = ({
         shops: data.shops!,
         calories_per_100g_or_ml: data.calories_per_100g_or_ml!,
         macros_per_100g_or_ml: data.macros_per_100g_or_ml!,
-        tags: (data.tags || []) as DietTag[]
+        tags: (data.tags || []) as DietTag[],
       };
 
       if (onSubmit) {
         // If a custom onSubmit is provided, use it and pass photo info
-        console.log('handleFormSubmit: Using custom onSubmit prop. Passing data, selectedPhoto:', selectedPhoto, 'photoRemoved:', photoRemoved);
+        console.log(
+          "handleFormSubmit: Using custom onSubmit prop. Passing data, selectedPhoto:",
+          selectedPhoto,
+          "photoRemoved:",
+          photoRemoved
+        );
         await onSubmit({ ...baseData, photoFile: selectedPhoto, photoRemoved });
       } else {
         // Use built-in API calls
         if (editingMode && ingredient) {
           if (selectedPhoto) {
-            console.log('handleFormSubmit (editing): selectedPhoto is TRUTHY, attempting to call updateIngredientWithPhoto.');
+            console.log(
+              "handleFormSubmit (editing): selectedPhoto is TRUTHY, attempting to call updateIngredientWithPhoto."
+            );
             const photoUploadData = {
               ...baseData,
-              photo_data: selectedPhoto
+              photo_data: selectedPhoto,
             };
-            await ingredientApi.updateIngredientWithPhoto(ingredient.id, photoUploadData);
+            await ingredientApi.updateIngredientWithPhoto(
+              ingredient.id,
+              photoUploadData
+            );
           } else if (photoRemoved) {
-            console.log('handleFormSubmit (editing): photoRemoved is true, updating with photo removal.');
-            // Note: This would need to be handled by the parent component since ingredientApi.updateIngredient 
+            console.log(
+              "handleFormSubmit (editing): photoRemoved is true, updating with photo removal."
+            );
+            // Note: This would need to be handled by the parent component since ingredientApi.updateIngredient
             // might not handle photo_data: null. For now, using regular update.
-            await ingredientApi.updateIngredient(ingredient.id, baseData as UpdateIngredientRequest);
+            await ingredientApi.updateIngredient(
+              ingredient.id,
+              baseData as UpdateIngredientRequest
+            );
           } else {
-            console.log('handleFormSubmit (editing): no photo changes, calling regular updateIngredient.');
-            await ingredientApi.updateIngredient(ingredient.id, baseData as UpdateIngredientRequest);
+            console.log(
+              "handleFormSubmit (editing): no photo changes, calling regular updateIngredient."
+            );
+            await ingredientApi.updateIngredient(
+              ingredient.id,
+              baseData as UpdateIngredientRequest
+            );
           }
           notifications.show({
-            title: 'Success',
-            message: 'Ingredient updated successfully!',
-            color: 'green',
+            title: "Success",
+            message: "Ingredient updated successfully!",
+            color: "green",
           });
         } else {
           // Creating new ingredient
           if (selectedPhoto) {
-            console.log('handleFormSubmit (creating): selectedPhoto is TRUTHY, attempting to call createIngredientWithPhoto.');
+            console.log(
+              "handleFormSubmit (creating): selectedPhoto is TRUTHY, attempting to call createIngredientWithPhoto."
+            );
             const photoUploadData = {
               ...baseData,
-              photo_data: selectedPhoto
+              photo_data: selectedPhoto,
             };
             await ingredientApi.createIngredientWithPhoto(photoUploadData);
           } else {
-            console.log('handleFormSubmit (creating): no photo, calling regular createIngredient.');
-            await ingredientApi.createIngredient(baseData as CreateIngredientRequest);
+            console.log(
+              "handleFormSubmit (creating): no photo, calling regular createIngredient."
+            );
+            await ingredientApi.createIngredient(
+              baseData as CreateIngredientRequest
+            );
           }
           notifications.show({
-            title: 'Success',
-            message: 'Ingredient created successfully!',
-            color: 'green',
+            title: "Success",
+            message: "Ingredient created successfully!",
+            color: "green",
           });
         }
       }
@@ -278,9 +326,9 @@ const AddEditIngredientForm = ({
       onClose();
     } catch (error) {
       notifications.show({
-        title: 'Error',
-        message: error instanceof Error ? error.message : 'An error occurred',
-        color: 'red',
+        title: "Error",
+        message: error instanceof Error ? error.message : "An error occurred",
+        color: "red",
       });
     } finally {
       setIsSubmitting(false);
@@ -292,7 +340,7 @@ const AddEditIngredientForm = ({
     setSelectedPhoto(null);
     setPreviewUrl(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
     onClose();
   };
@@ -301,8 +349,19 @@ const AddEditIngredientForm = ({
     <Modal
       opened={isOpen}
       onClose={handleCancel}
-      title={editingMode ? 'Edit Ingredient' : 'Add New Ingredient'}
-      size="lg"
+      title={editingMode ? "Edit Ingredient" : "Add New Ingredient"}
+      size="xl"
+      footer={
+        <Group justify="flex-end">
+          <Button
+            type="submit"
+            loading={isSubmitting}
+            onClick={handleSubmit(handleFormSubmit)}
+          >
+            {editingMode ? "Update Ingredient" : "Add Ingredient"}
+          </Button>
+        </Group>
+      }
     >
       <form onSubmit={handleSubmit(handleFormSubmit)}>
         <Stack gap="md">
@@ -311,7 +370,7 @@ const AddEditIngredientForm = ({
             label="Name"
             placeholder="Enter ingredient name"
             error={errors.name?.message}
-            {...register('name')}
+            {...register("name")}
             required
           />
 
@@ -319,48 +378,94 @@ const AddEditIngredientForm = ({
           <TextInput
             label="Shops (comma-separated)"
             placeholder="e.g., Tesco, Lidl, Local Market"
-            value={watchedShops.join(', ')}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setValue('shops', e.currentTarget.value.split(',').map((s: string) => s.trim()).filter(Boolean))}
+            value={watchedShops.join(", ")}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setValue(
+                "shops",
+                e.currentTarget.value
+                  .split(",")
+                  .map((s: string) => s.trim())
+                  .filter(Boolean)
+              )
+            }
             error={errors.shops?.message}
             description="Enter shops separated by commas"
           />
 
           {/* E3011 - PhotoUploadField */}
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 500 }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "8px",
+                fontSize: "14px",
+                fontWeight: 500,
+              }}
+            >
               Photo
             </label>
-            
+
             {/* Show existing photo when editing (and not removed) */}
-            {editingMode && isValidPhotoData(ingredient?.photo_data) && !selectedPhoto && !photoRemoved && (
-              <div style={{ marginBottom: '12px' }}>
-                <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>Current photo:</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Image
-                    src={createImageDataUrl(ingredient!.photo_data)}
-                    alt={ingredient!.name}
-                    w={80}
-                    h={80}
-                    radius="sm"
-                    fit="cover"
-                    fallbackSrc="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjFGM0Y0Ii8+CjxwYXRoIGQ9Ik0zMiAzMkgyNFY0MEgzMlYzMloiIGZpbGw9IiNEOUREREREIi8+CjwvcGF0aD4KPC9zdmc+Cg=="
-                  />
-                  <Button
-                    variant="outline"
-                    color="red"
-                    size="xs"
-                    onClick={handleRemovePhoto}
+            {editingMode &&
+              isValidPhotoData(ingredient?.photo_data) &&
+              !selectedPhoto &&
+              !photoRemoved && (
+                <div style={{ marginBottom: "12px" }}>
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "#666",
+                      marginBottom: "4px",
+                    }}
                   >
-                    Remove Photo
-                  </Button>
+                    Current photo:
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <Image
+                      src={createImageDataUrl(ingredient!.photo_data)}
+                      alt={ingredient!.name}
+                      w={80}
+                      h={80}
+                      radius="sm"
+                      fit="cover"
+                      fallbackSrc="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCA4MCA4MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjgwIiBoZWlnaHQ9IjgwIiBmaWxsPSIjRjFGM0Y0Ii8+CjxwYXRoIGQ9Ik0zMiAzMkgyNFY0MEgzMlYzMloiIGZpbGw9IiNEOUREREREIi8+CjwvcGF0aD4KPC9zdmc+Cg=="
+                    />
+                    <Button
+                      variant="outline"
+                      color="red"
+                      size="xs"
+                      onClick={handleRemovePhoto}
+                    >
+                      Remove Photo
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Show photo removed notice with undo option */}
             {editingMode && photoRemoved && !selectedPhoto && (
-              <div style={{ marginBottom: '12px', padding: '8px', backgroundColor: '#fff3cd', border: '1px solid #ffeaa7', borderRadius: '4px' }}>
-                <div style={{ fontSize: '12px', color: '#856404', marginBottom: '4px' }}>
+              <div
+                style={{
+                  marginBottom: "12px",
+                  padding: "8px",
+                  backgroundColor: "#fff3cd",
+                  border: "1px solid #ffeaa7",
+                  borderRadius: "4px",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "#856404",
+                    marginBottom: "4px",
+                  }}
+                >
                   Photo will be removed when you save.
                 </div>
                 <Button
@@ -373,12 +478,20 @@ const AddEditIngredientForm = ({
                 </Button>
               </div>
             )}
-            
+
             {/* Show new photo preview */}
             {selectedPhoto && previewUrl && (
-              <div style={{ marginBottom: '12px' }}>
-                <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
-                  {editingMode ? 'New photo (will replace current):' : 'Selected photo:'}
+              <div style={{ marginBottom: "12px" }}>
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "#666",
+                    marginBottom: "4px",
+                  }}
+                >
+                  {editingMode
+                    ? "New photo (will replace current):"
+                    : "Selected photo:"}
                 </div>
                 <Image
                   src={previewUrl}
@@ -390,39 +503,41 @@ const AddEditIngredientForm = ({
                 />
               </div>
             )}
-            
+
             <input
               ref={fileInputRef}
               type="file"
               accept="image/*"
               onChange={handleFileChange}
               style={{
-                width: '100%',
-                padding: '8px',
-                border: '1px solid #ccc',
-                borderRadius: '4px',
-                cursor: 'pointer'
+                width: "100%",
+                padding: "8px",
+                border: "1px solid #ccc",
+                borderRadius: "4px",
+                cursor: "pointer",
               }}
             />
-            <small style={{ color: '#666', fontSize: '12px' }}>
-              {editingMode ? 'Upload a new photo to replace the current one (optional)' : 'Upload a photo of the ingredient (optional)'}
+            <small style={{ color: "#666", fontSize: "12px" }}>
+              {editingMode
+                ? "Upload a new photo to replace the current one (optional)"
+                : "Upload a photo of the ingredient (optional)"}
             </small>
-            
+
             {selectedPhoto && (
-              <div style={{ marginTop: '8px', color: '#28a745' }}>
+              <div style={{ marginTop: "8px", color: "#28a745" }}>
                 Selected: {selectedPhoto.name}
                 <button
                   type="button"
                   onClick={handleRemoveNewPhoto}
                   style={{
-                    marginLeft: '8px',
-                    padding: '2px 6px',
-                    backgroundColor: '#dc3545',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '2px',
-                    cursor: 'pointer',
-                    fontSize: '12px'
+                    marginLeft: "8px",
+                    padding: "2px 6px",
+                    backgroundColor: "#dc3545",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "2px",
+                    cursor: "pointer",
+                    fontSize: "12px",
                   }}
                 >
                   Remove
@@ -433,23 +548,26 @@ const AddEditIngredientForm = ({
 
           <Divider label="Nutritional Information" labelPosition="center" />
 
-          {/* E3013 - CaloriesField */}
-          <Controller
-            name="calories_per_100g_or_ml"
-            control={control}
-            render={({ field }) => (
-              <NumberInput
-                label="Calories per 100g/ml"
-                placeholder="0"
-                min={0}
-                error={errors.calories_per_100g_or_ml?.message}
-                {...field}
+          <NutritionGrid title="Per 100g/ml">
+            {/* Calories - prominent position */}
+            <div className="col-span-2">
+              <Controller
+                name="calories_per_100g_or_ml"
+                control={control}
+                render={({ field }) => (
+                  <NumberInput
+                    label="Calories"
+                    placeholder="0"
+                    min={0}
+                    compact
+                    error={errors.calories_per_100g_or_ml?.message}
+                    {...field}
+                  />
+                )}
               />
-            )}
-          />
+            </div>
 
-          {/* Macros Fields - E3014, E3015, E3016, E3017, E3018, E3019 */}
-          <Group grow>
+            {/* Macros - 2x3 grid */}
             <Controller
               name="macros_per_100g_or_ml.protein"
               control={control}
@@ -459,6 +577,7 @@ const AddEditIngredientForm = ({
                   placeholder="0"
                   min={0}
                   step={0.1}
+                  compact
                   error={errors.macros_per_100g_or_ml?.protein?.message}
                   {...field}
                 />
@@ -469,10 +588,11 @@ const AddEditIngredientForm = ({
               control={control}
               render={({ field }) => (
                 <NumberInput
-                  label="Carbohydrates (g)"
+                  label="Carbs (g)"
                   placeholder="0"
                   min={0}
                   step={0.1}
+                  compact
                   error={errors.macros_per_100g_or_ml?.carbohydrates?.message}
                   {...field}
                 />
@@ -487,14 +607,12 @@ const AddEditIngredientForm = ({
                   placeholder="0"
                   min={0}
                   step={0.1}
+                  compact
                   error={errors.macros_per_100g_or_ml?.fat?.message}
                   {...field}
                 />
               )}
             />
-          </Group>
-
-          <Group grow>
             <Controller
               name="macros_per_100g_or_ml.sugar"
               control={control}
@@ -504,6 +622,7 @@ const AddEditIngredientForm = ({
                   placeholder="0"
                   min={0}
                   step={0.1}
+                  compact
                   error={errors.macros_per_100g_or_ml?.sugar?.message}
                   {...field}
                 />
@@ -518,6 +637,7 @@ const AddEditIngredientForm = ({
                   placeholder="0"
                   min={0}
                   step={0.1}
+                  compact
                   error={errors.macros_per_100g_or_ml?.fiber?.message}
                   {...field}
                 />
@@ -528,16 +648,17 @@ const AddEditIngredientForm = ({
               control={control}
               render={({ field }) => (
                 <NumberInput
-                  label="Saturated Fat (g)"
+                  label="Sat. Fat (g)"
                   placeholder="0"
                   min={0}
                   step={0.1}
+                  compact
                   error={errors.macros_per_100g_or_ml?.saturated_fat?.message}
                   {...field}
                 />
               )}
             />
-          </Group>
+          </NutritionGrid>
 
           {/* E3020 - TagsField */}
           <MultiSelect
@@ -545,28 +666,11 @@ const AddEditIngredientForm = ({
             placeholder="Select diet tags"
             data={dietTagOptions}
             value={watchedTags}
-            onChange={(value: string[]) => setValue('tags', value as DietTag[])}
+            onChange={(value: string[]) => setValue("tags", value as DietTag[])}
             error={errors.tags?.message}
             searchable
             clearable
           />
-
-          {/* Action Buttons - E3021, E3022 */}
-          <Group justify="flex-end" mt="md">
-            <Button
-              variant="outline"
-              onClick={handleCancel}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              loading={isSubmitting}
-            >
-              {editingMode ? 'Update Ingredient' : 'Add Ingredient'}
-            </Button>
-          </Group>
         </Stack>
       </form>
     </Modal>

@@ -102,21 +102,21 @@ export const DateRangeSelector = ({
         <Text size="sm" fw={500}>Quick Select:</Text>
         <Button 
           size="xs" 
-          variant="light" 
+          color="neutral"
           onClick={() => handleQuickSelect('today')}
         >
           Today
         </Button>
         <Button 
           size="xs" 
-          variant="light" 
+          color="neutral"
           onClick={() => handleQuickSelect('thisWeek')}
         >
           This Week
         </Button>
         <Button 
           size="xs" 
-          variant="light" 
+          color="neutral"
           onClick={() => handleQuickSelect('thisMonth')}
         >
           This Month

@@ -1,22 +1,38 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { 
-  Modal, TextInput, Textarea, Button, Group, Stack,
-  NumberInput, MultiSelect, Switch, Title, Divider,
-  ScrollArea, Grid, Card, notifications, useForm, FileInput
-} from '@/shared/ui-kit';
-import { 
-  IconChefHat, 
-  IconPhoto, 
-  IconCalculator 
-} from '@tabler/icons-react';
-import { DietTagEnum } from '@/shared/lib/types';
-import type { 
-  Meal, 
-  CreateMealRequest, 
-  UpdateMealRequest
-} from '@/entities/meal/model/types';
-import { IngredientSelectorForMeal, type MealIngredient as MealIngredientType } from './IngredientSelectorForMeal';
-import { IngredientEquivalentsManager, type MealEquivalent } from './IngredientEquivalentsManager';
+import { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  Modal,
+  TextInput,
+  Textarea,
+  Button,
+  Group,
+  Stack,
+  NumberInput,
+  MultiSelect,
+  Switch,
+  Title,
+  Divider,
+  ScrollArea,
+  Card,
+  notifications,
+  useForm,
+  FileInput,
+  NutritionGrid,
+} from "@/shared/ui-kit";
+import { IconChefHat, IconPhoto, IconCalculator } from "@tabler/icons-react";
+import { DietTagEnum } from "@/shared/lib/types";
+import type {
+  Meal,
+  CreateMealRequest,
+  UpdateMealRequest,
+} from "@/entities/meal/model/types";
+import {
+  IngredientSelectorForMeal,
+  type MealIngredient as MealIngredientType,
+} from "./IngredientSelectorForMeal";
+import {
+  IngredientEquivalentsManager,
+  type MealEquivalent,
+} from "./IngredientEquivalentsManager";
 
 interface AddEditMealFormProps {
   meal?: Meal | null;
@@ -38,97 +54,124 @@ interface FormValues {
     fat: number;
     fiber: number;
     saturated_fat: number;
-  } | null;
+  };
   is_nutrition_calculated: boolean;
   tags: string[];
   ingredients: MealIngredientType[];
   equivalents: MealEquivalent[];
 }
 
-const AddEditMealForm = ({ 
-  meal, 
-  isOpen, 
-  onClose, 
-  onSubmit, 
-  isLoading = false 
+const AddEditMealForm = ({
+  meal,
+  isOpen,
+  onClose,
+  onSubmit,
+  isLoading = false,
 }: AddEditMealFormProps) => {
   const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
     initialValues: {
-      name: '',
-      recipe: '',
+      name: "",
+      recipe: "",
       photo_data: null,
       calories_total: null,
-      macros_total: null,
+      macros_total: {
+        protein: 0,
+        carbohydrates: 0,
+        sugar: 0,
+        fat: 0,
+        fiber: 0,
+        saturated_fat: 0,
+      },
       is_nutrition_calculated: false,
       tags: [],
       ingredients: [],
-      equivalents: []
+      equivalents: [],
     },
     validate: {
-      name: (value) => 
-        value.length < 1 ? 'Meal name is required' : 
-        value.length > 150 ? 'Meal name must be less than 150 characters' : null,
+      name: (value) =>
+        value.length < 1
+          ? "Meal name is required"
+          : value.length > 150
+          ? "Meal name must be less than 150 characters"
+          : null,
     },
   });
 
   useEffect(() => {
     if (meal && isOpen) {
       // Convert meal ingredients to local format
-      const convertedIngredients: MealIngredientType[] = meal.ingredients.map(ing => ({
-        id: ing.item_id,
-        name: ing.item_name,
-        type: ing.item_type,
-        quantity: ing.quantity,
-        unit: ing.unit,
-        calories_per_100g: 0, // Will be fetched if needed
-        protein_per_100g: 0,
-        carbs_per_100g: 0,
-        sugar_per_100g: 0,
-        fat_per_100g: 0,
-        fiber_per_100g: 0,
-        saturated_fat_per_100g: 0,
-      }));
+      const convertedIngredients: MealIngredientType[] = meal.ingredients.map(
+        (ing) => ({
+          id: ing.item_id,
+          name: ing.item_name,
+          type: ing.item_type,
+          quantity: ing.quantity,
+          unit: ing.unit,
+          calories_per_100g: 0, // Will be fetched if needed
+          protein_per_100g: 0,
+          carbs_per_100g: 0,
+          sugar_per_100g: 0,
+          fat_per_100g: 0,
+          fiber_per_100g: 0,
+          saturated_fat_per_100g: 0,
+        })
+      );
 
       // Convert meal equivalents to local format
-      const convertedEquivalents: MealEquivalent[] = meal.equivalents.map(equiv => ({
-        originalIngredientId: equiv.original_item_id,
-        originalIngredientName: 'N/A', // We'll need to look this up
-        originalIngredientType: 'ingredient', // Default type since API doesn't provide this
-        equivalentIngredientId: equiv.equivalent_item_id,
-        equivalentIngredientName: equiv.equivalent_item_name,
-        equivalentIngredientType: equiv.equivalent_item_type,
-      }));
+      const convertedEquivalents: MealEquivalent[] = meal.equivalents.map(
+        (equiv) => ({
+          originalIngredientId: equiv.original_item_id,
+          originalIngredientName: "N/A", // We'll need to look this up
+          originalIngredientType: "ingredient", // Default type since API doesn't provide this
+          equivalentIngredientId: equiv.equivalent_item_id,
+          equivalentIngredientName: equiv.equivalent_item_name,
+          equivalentIngredientType: equiv.equivalent_item_type,
+        })
+      );
 
       form.setValues({
         name: meal.name,
-        recipe: meal.recipe || '',
+        recipe: meal.recipe || "",
         photo_data: meal.photo_data ?? null,
         calories_total: meal.calories_total ?? null,
-        macros_total: meal.macros_total ?? null,
+        macros_total: meal.macros_total ?? {
+          protein: 0,
+          carbohydrates: 0,
+          sugar: 0,
+          fat: 0,
+          fiber: 0,
+          saturated_fat: 0,
+        },
         is_nutrition_calculated: meal.is_nutrition_calculated,
         tags: meal.tags,
         ingredients: convertedIngredients,
-        equivalents: convertedEquivalents
+        equivalents: convertedEquivalents,
       });
     } else if (!meal && isOpen) {
       form.reset();
     }
   }, [meal, isOpen]);
 
-  const handleIngredientsChange = useCallback((ingredients: MealIngredientType[]) => {
-    form.setFieldValue('ingredients', ingredients);
-  }, []);
+  const handleIngredientsChange = useCallback(
+    (ingredients: MealIngredientType[]) => {
+      form.setFieldValue("ingredients", ingredients);
+    },
+    []
+  );
 
-  const handleEquivalentsChange = useCallback((equivalents: MealEquivalent[]) => {
-    form.setFieldValue('equivalents', equivalents);
-  }, []);
+  const handleEquivalentsChange = useCallback(
+    (equivalents: MealEquivalent[]) => {
+      form.setFieldValue("equivalents", equivalents);
+    },
+    []
+  );
 
   const handleSubmit = async (values: FormValues) => {
     try {
       setSubmitting(true);
-      
+
       const mealData = {
         name: values.name,
         recipe: values.recipe || null,
@@ -138,32 +181,32 @@ const AddEditMealForm = ({
         is_nutrition_calculated: values.is_nutrition_calculated,
         tags: values.tags as any, // Cast to DietTag[] - will be validated by backend
         // Convert local ingredient format to API format
-        ingredients: values.ingredients.map(ing => ({
+        ingredients: values.ingredients.map((ing) => ({
           item_id: ing.id,
           item_type: ing.type,
           item_name: ing.name,
           quantity: ing.quantity,
           unit: ing.unit as any, // Cast to Unit type - will be validated by backend
         })),
-        // Convert local equivalent format to API format  
-        equivalents: values.equivalents.map(equiv => ({
+        // Convert local equivalent format to API format
+        equivalents: values.equivalents.map((equiv) => ({
           original_item_id: equiv.originalIngredientId,
           equivalent_item_id: equiv.equivalentIngredientId,
           equivalent_item_type: equiv.equivalentIngredientType,
           equivalent_item_name: equiv.equivalentIngredientName,
           conversion_ratio: 1, // Default conversion ratio
-        }))
+        })),
       };
 
       await onSubmit(mealData);
       form.reset();
       onClose();
     } catch (error) {
-      console.error('Failed to submit meal:', error);
+      console.error("Failed to submit meal:", error);
       notifications.show({
-        title: 'Error',
-        message: 'Failed to save meal. Please try again.',
-        color: 'red',
+        title: "Error",
+        message: "Failed to save meal. Please try again.",
+        color: "red",
       });
     } finally {
       setSubmitting(false);
@@ -172,44 +215,48 @@ const AddEditMealForm = ({
 
   const calculateNutrition = useCallback(() => {
     const ingredients = form.values.ingredients;
-    
+
     if (ingredients.length === 0) {
       notifications.show({
-        title: 'No Ingredients',
-        message: 'Add some ingredients first to calculate nutrition',
-        color: 'orange',
+        title: "No Ingredients",
+        message: "Add some ingredients first to calculate nutrition",
+        color: "orange",
       });
       return;
     }
 
-    const totals = ingredients.reduce((acc, ingredient) => {
-      const factor = ingredient.quantity / 100; // Convert to per-100g basis
-      
-      return {
-        protein: acc.protein + (ingredient.protein_per_100g * factor),
-        carbohydrates: acc.carbohydrates + (ingredient.carbs_per_100g * factor),
-        sugar: acc.sugar + (ingredient.sugar_per_100g * factor),
-        fat: acc.fat + (ingredient.fat_per_100g * factor),
-        fiber: acc.fiber + (ingredient.fiber_per_100g * factor),
-        saturated_fat: acc.saturated_fat + (ingredient.saturated_fat_per_100g * factor),
-      };
-    }, {
-      protein: 0,
-      carbohydrates: 0,
-      sugar: 0,
-      fat: 0,
-      fiber: 0,
-      saturated_fat: 0,
-    });
+    const totals = ingredients.reduce(
+      (acc, ingredient) => {
+        const factor = ingredient.quantity / 100; // Convert to per-100g basis
+
+        return {
+          protein: acc.protein + ingredient.protein_per_100g * factor,
+          carbohydrates: acc.carbohydrates + ingredient.carbs_per_100g * factor,
+          sugar: acc.sugar + ingredient.sugar_per_100g * factor,
+          fat: acc.fat + ingredient.fat_per_100g * factor,
+          fiber: acc.fiber + ingredient.fiber_per_100g * factor,
+          saturated_fat:
+            acc.saturated_fat + ingredient.saturated_fat_per_100g * factor,
+        };
+      },
+      {
+        protein: 0,
+        carbohydrates: 0,
+        sugar: 0,
+        fat: 0,
+        fiber: 0,
+        saturated_fat: 0,
+      }
+    );
 
     const totalCalories = ingredients.reduce((acc, ingredient) => {
       const factor = ingredient.quantity / 100;
-      return acc + (ingredient.calories_per_100g * factor);
+      return acc + ingredient.calories_per_100g * factor;
     }, 0);
 
     // Update form values
-    form.setFieldValue('calories_total', Math.round(totalCalories));
-    form.setFieldValue('macros_total', {
+    form.setFieldValue("calories_total", Math.round(totalCalories));
+    form.setFieldValue("macros_total", {
       protein: Math.round(totals.protein * 10) / 10,
       carbohydrates: Math.round(totals.carbohydrates * 10) / 10,
       sugar: Math.round(totals.sugar * 10) / 10,
@@ -217,12 +264,13 @@ const AddEditMealForm = ({
       fiber: Math.round(totals.fiber * 10) / 10,
       saturated_fat: Math.round(totals.saturated_fat * 10) / 10,
     });
-    form.setFieldValue('is_nutrition_calculated', true);
+    form.setFieldValue("is_nutrition_calculated", true);
 
     notifications.show({
-      title: 'Nutrition Calculated',
-      message: 'Nutritional values have been calculated from selected ingredients',
-      color: 'green',
+      title: "Nutrition Calculated",
+      message:
+        "Nutritional values have been calculated from selected ingredients",
+      color: "green",
     });
   }, [form.values.ingredients]);
 
@@ -232,20 +280,23 @@ const AddEditMealForm = ({
       reader.onload = () => {
         const base64 = reader.result as string;
         // Remove the data URL prefix to get just the base64 data
-        const base64Data = base64.split(',')[1];
-        form.setFieldValue('photo_data', base64Data);
+        const base64Data = base64.split(",")[1];
+        form.setFieldValue("photo_data", base64Data);
       };
       reader.readAsDataURL(file);
     } else {
-      form.setFieldValue('photo_data', null);
+      form.setFieldValue("photo_data", null);
     }
   }, []);
 
-  const dietTagOptions = useMemo(() => 
-    Object.values(DietTagEnum).map(tag => ({
-      value: tag,
-      label: tag.replace('_', ' ').toUpperCase()
-    })), []);
+  const dietTagOptions = useMemo(
+    () =>
+      Object.values(DietTagEnum).map((tag) => ({
+        value: tag,
+        label: tag.replace("_", " ").toUpperCase(),
+      })),
+    []
+  );
 
   return (
     <Modal
@@ -254,13 +305,22 @@ const AddEditMealForm = ({
       title={
         <Group gap="sm">
           <IconChefHat size={20} />
-          <Title order={3}>
-            {meal ? 'Edit Meal' : 'Add New Meal'}
-          </Title>
+          <Title order={3}>{meal ? "Edit Meal" : "Add New Meal"}</Title>
         </Group>
       }
       size="xl"
       scrollAreaComponent={ScrollArea.Autosize}
+      footer={
+        <Group justify="flex-end" mt="xl">
+          <Button
+            type="submit"
+            loading={submitting || isLoading}
+            leftSection={<IconChefHat size={16} />}
+          >
+            {meal ? "Update Meal" : "Create Meal"}
+          </Button>
+        </Group>
+      }
     >
       <form onSubmit={form.onSubmit(handleSubmit)}>
         <Stack gap="md">
@@ -269,7 +329,7 @@ const AddEditMealForm = ({
             label="Meal Name"
             placeholder="Enter meal name"
             required
-            {...form.getInputProps('name')}
+            {...form.getInputProps("name")}
           />
 
           <FileInput
@@ -286,11 +346,11 @@ const AddEditMealForm = ({
             minRows={4}
             maxRows={8}
             autosize
-            {...form.getInputProps('recipe')}
+            {...form.getInputProps("recipe")}
           />
 
           <Divider label="Ingredients & Composition" />
-          
+
           <Card withBorder p="md">
             <IngredientSelectorForMeal
               selectedIngredients={form.values.ingredients}
@@ -313,12 +373,17 @@ const AddEditMealForm = ({
           <Group grow>
             <Switch
               label="Auto-calculate nutrition from ingredients"
-              {...form.getInputProps('is_nutrition_calculated', { type: 'checkbox' })}
+              {...form.getInputProps("is_nutrition_calculated", {
+                type: "checkbox",
+              })}
             />
-            <Button 
-              variant="light" 
+            <Button
+              variant="light"
               leftSection={<IconCalculator size={16} />}
-              disabled={!form.values.is_nutrition_calculated || form.values.ingredients.length === 0}
+              disabled={
+                !form.values.is_nutrition_calculated ||
+                form.values.ingredients.length === 0
+              }
               onClick={calculateNutrition}
             >
               Calculate
@@ -331,100 +396,76 @@ const AddEditMealForm = ({
               placeholder="0"
               min={0}
               disabled={form.values.is_nutrition_calculated}
-              {...form.getInputProps('calories_total')}
+              {...form.getInputProps("calories_total")}
             />
           </Group>
 
-          <Grid>
-            <Grid.Col span={6}>
-              <NumberInput
-                label="Protein (g)"
-                placeholder="0"
-                min={0}
-                decimalScale={1}
-                disabled={form.values.is_nutrition_calculated}
-                value={form.values.macros_total?.protein || 0}
-                onChange={(value: any) => form.setFieldValue('macros_total.protein', Number(value) || 0)}
-              />
-            </Grid.Col>
-            <Grid.Col span={6}>
-              <NumberInput
-                label="Carbohydrates (g)"
-                placeholder="0"
-                min={0}
-                decimalScale={1}
-                disabled={form.values.is_nutrition_calculated}
-                value={form.values.macros_total?.carbohydrates || 0}
-                onChange={(value: any) => form.setFieldValue('macros_total.carbohydrates', Number(value) || 0)}
-              />
-            </Grid.Col>
-            <Grid.Col span={6}>
-              <NumberInput
-                label="Sugar (g)"
-                placeholder="0"
-                min={0}
-                decimalScale={1}
-                disabled={form.values.is_nutrition_calculated}
-                value={form.values.macros_total?.sugar || 0}
-                onChange={(value: any) => form.setFieldValue('macros_total.sugar', Number(value) || 0)}
-              />
-            </Grid.Col>
-            <Grid.Col span={6}>
-              <NumberInput
-                label="Fat (g)"
-                placeholder="0"
-                min={0}
-                decimalScale={1}
-                disabled={form.values.is_nutrition_calculated}
-                value={form.values.macros_total?.fat || 0}
-                onChange={(value: any) => form.setFieldValue('macros_total.fat', Number(value) || 0)}
-              />
-            </Grid.Col>
-            <Grid.Col span={6}>
-              <NumberInput
-                label="Fiber (g)"
-                placeholder="0"
-                min={0}
-                decimalScale={1}
-                disabled={form.values.is_nutrition_calculated}
-                value={form.values.macros_total?.fiber || 0}
-                onChange={(value: any) => form.setFieldValue('macros_total.fiber', Number(value) || 0)}
-              />
-            </Grid.Col>
-            <Grid.Col span={6}>
-              <NumberInput
-                label="Saturated Fat (g)"
-                placeholder="0"
-                min={0}
-                decimalScale={1}
-                disabled={form.values.is_nutrition_calculated}
-                value={form.values.macros_total?.saturated_fat || 0}
-                onChange={(value: any) => form.setFieldValue('macros_total.saturated_fat', Number(value) || 0)}
-              />
-            </Grid.Col>
-          </Grid>
-          
+          <NutritionGrid title="Macronutrients">
+            {/* Macros - 2x3 grid */}
+            <NumberInput
+              label="Protein (g)"
+              placeholder="0"
+              min={0}
+              step={0.1}
+              compact
+              disabled={form.values.is_nutrition_calculated}
+              {...form.getInputProps("macros_total.protein")}
+            />
+            <NumberInput
+              label="Carbs (g)"
+              placeholder="0"
+              min={0}
+              step={0.1}
+              compact
+              disabled={form.values.is_nutrition_calculated}
+              {...form.getInputProps("macros_total.carbohydrates")}
+            />
+            <NumberInput
+              label="Fat (g)"
+              placeholder="0"
+              min={0}
+              step={0.1}
+              compact
+              disabled={form.values.is_nutrition_calculated}
+              {...form.getInputProps("macros_total.fat")}
+            />
+            <NumberInput
+              label="Sugar (g)"
+              placeholder="0"
+              min={0}
+              step={0.1}
+              compact
+              disabled={form.values.is_nutrition_calculated}
+              {...form.getInputProps("macros_total.sugar")}
+            />
+            <NumberInput
+              label="Fiber (g)"
+              placeholder="0"
+              min={0}
+              step={0.1}
+              compact
+              disabled={form.values.is_nutrition_calculated}
+              {...form.getInputProps("macros_total.fiber")}
+            />
+            <NumberInput
+              label="Sat. Fat (g)"
+              placeholder="0"
+              min={0}
+              step={0.1}
+              compact
+              disabled={form.values.is_nutrition_calculated}
+              {...form.getInputProps("macros_total.saturated_fat")}
+            />
+          </NutritionGrid>
+
           <MultiSelect
             label="Diet Tags"
             placeholder="Select applicable diet tags"
             data={dietTagOptions}
-            {...form.getInputProps('tags')}
+            {...form.getInputProps("tags")}
             searchable
             clearable
           />
-
-          <Group justify="flex-end" mt="xl">
-            <Button variant="outline" onClick={onClose} disabled={submitting}>
-              Cancel
-            </Button>
-            <Button 
-              type="submit" 
-              loading={submitting || isLoading}
-              leftSection={<IconChefHat size={16} />}
-            >
-              {meal ? 'Update Meal' : 'Create Meal'}
-            </Button>
-          </Group>
         </Stack>
       </form>
     </Modal>

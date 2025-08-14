@@ -1,0 +1,255 @@
+/* Modern MealInsights Theme Enhancements - Using DevItTheme Colors */
+
+/* Gradient backgrounds and animations */
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes slide-in {
+  from { 
+    opacity: 0; 
+    transform: translateY(20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+/* Global enhancements */
+.hover-lift {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Card enhancements using DevItTheme colors */
+.card-gradient-primary {
+  background: linear-gradient(135deg, 
+    color-mix(in srgb, var(--color-primary-500) 15%, transparent), 
+    color-mix(in srgb, var(--color-primary-600) 10%, transparent)
+  );
+  border: 1px solid color-mix(in srgb, var(--color-primary-500) 30%, transparent);
+}
+
+.card-gradient-secondary {
+  background: linear-gradient(135deg, 
+    color-mix(in srgb, var(--color-secondary-500) 15%, transparent), 
+    color-mix(in srgb, var(--color-secondary-600) 10%, transparent)
+  );
+  border: 1px solid color-mix(in srgb, var(--color-secondary-500) 30%, transparent);
+}
+
+.card-gradient-success {
+  background: linear-gradient(135deg, 
+    color-mix(in srgb, var(--color-success-500) 15%, transparent), 
+    color-mix(in srgb, var(--color-success-600) 10%, transparent)
+  );
+  border: 1px solid color-mix(in srgb, var(--color-success-500) 30%, transparent);
+}
+
+.card-gradient-warning {
+  background: linear-gradient(135deg, 
+    color-mix(in srgb, var(--color-warning-500) 15%, transparent), 
+    color-mix(in srgb, var(--color-warning-600) 10%, transparent)
+  );
+  border: 1px solid color-mix(in srgb, var(--color-warning-500) 30%, transparent);
+}
+
+.card-gradient-error {
+  background: linear-gradient(135deg, 
+    color-mix(in srgb, var(--color-error-500) 15%, transparent), 
+    color-mix(in srgb, var(--color-error-600) 10%, transparent)
+  );
+  border: 1px solid color-mix(in srgb, var(--color-error-500) 30%, transparent);
+}
+
+/* Glass morphism effects */
+.glass {
+  backdrop-filter: blur(16px) saturate(180%);
+  background-color: color-mix(in srgb, var(--color-surface-900) 75%, transparent);
+  border: 1px solid var(--color-surface-700);
+}
+
+.glass-light {
+  backdrop-filter: blur(8px) saturate(160%);
+  background-color: color-mix(in srgb, var(--color-surface-800) 50%, transparent);
+  border: 1px solid var(--color-surface-600);
+}
+
+/* Button enhancements using theme colors */
+.btn-gradient {
+  background: linear-gradient(45deg, var(--color-primary-500), var(--color-secondary-500));
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+  border: none;
+  color: var(--color-primary-contrast-light);
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-gradient:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px color-mix(in srgb, var(--color-primary-500) 40%, transparent);
+}
+
+/* Text gradient effects using theme colors */
+.text-gradient-primary {
+  background: linear-gradient(45deg, var(--color-primary-400), var(--color-primary-600));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-secondary {
+  background: linear-gradient(45deg, var(--color-secondary-400), var(--color-secondary-600));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-success {
+  background: linear-gradient(45deg, var(--color-success-400), var(--color-success-600));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-warning {
+  background: linear-gradient(45deg, var(--color-warning-400), var(--color-warning-600));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-error {
+  background: linear-gradient(45deg, var(--color-error-400), var(--color-error-600));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Smooth scrollbars using theme colors */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-surface-600) transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: var(--color-surface-600);
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-surface-500);
+}
+
+/* Progress bar enhancements */
+.progress-glow {
+  position: relative;
+  overflow: visible;
+}
+
+.progress-glow::after {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, transparent, color-mix(in srgb, var(--color-primary-500) 50%, transparent), transparent);
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.progress-glow:hover::after {
+  opacity: 1;
+}
+
+/* Animation utilities */
+.animate-slide-in {
+  animation: slide-in 0.6s ease-out;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  .mobile-hide {
+    display: none;
+  }
+}
+
+/* Focus states using theme colors */
+.focus-ring {
+  transition: all 0.2s ease;
+}
+
+.focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary-500) 50%, transparent);
+}
+
+/* Sidebar enhancements */
+.sidebar-nav-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebar-nav-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--color-surface-700) 10%, transparent), transparent);
+  transition: left 0.6s ease;
+}
+
+.sidebar-nav-item:hover::before {
+  left: 100%;
+}
+
+/* Loading states using theme colors */
+.skeleton {
+  background: linear-gradient(90deg, var(--color-surface-700) 25%, var(--color-surface-600) 50%, var(--color-surface-700) 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

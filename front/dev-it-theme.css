@@ -38,9 +38,9 @@
 	--color-primary-100: oklch(71.17% 0.16 310.01deg);
 	--color-primary-200: oklch(63.72% 0.17 307.14deg);
 	--color-primary-300: oklch(56.54% 0.18 304.08deg);
-	--color-primary-400: oklch(49.06% 0.19 300.49deg);
-	--color-primary-500: oklch(41.88% 0.19 295.74deg);
-	--color-primary-600: oklch(37.03% 0.17 292.87deg);
+	--color-primary-400: oklch(52.06% 0.21 300.49deg);
+	--color-primary-500: oklch(45.88% 0.21 295.74deg);
+	--color-primary-600: oklch(40.03% 0.19 292.87deg);
 	--color-primary-700: oklch(31.95% 0.15 289.36deg);
 	--color-primary-800: oklch(26.72% 0.14 284.38deg);
 	--color-primary-900: oklch(21.32% 0.12 277.55deg);
@@ -183,8 +183,8 @@
 	--color-surface-200: oklch(55.11% 0.03 273.75deg);
 	--color-surface-300: oklch(47.67% 0.03 272.39deg);
 	--color-surface-400: oklch(39.64% 0.03 272.17deg);
-	--color-surface-500: oklch(31.14% 0.03 271.12deg);
-	--color-surface-600: oklch(27.05% 0.02 271.36deg);
+	--color-surface-500: oklch(35.14% 0.04 271.12deg);
+	--color-surface-600: oklch(30.05% 0.03 271.36deg);
 	--color-surface-700: oklch(23.18% 0.02 270.53deg);
 	--color-surface-800: oklch(18.79% 0.01 272.47deg);
 	--color-surface-900: oklch(14.5% 0.01 270.48deg);
