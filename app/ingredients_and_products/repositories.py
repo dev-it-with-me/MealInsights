@@ -377,6 +377,35 @@ class IngredientRepository:
         """Searches ingredients by name pattern using raw SQL."""
         return self.get_all(limit=limit, name_filter=name_pattern)
 
+    def get_product_ingredients(self, product_id: uuid.UUID) -> list[Ingredient]:
+        """Fetches all ingredients associated with a product."""
+        sql = text("""
+            SELECT i.*
+            FROM ingredients i
+            JOIN product_ingredients pi ON i.id = pi.ingredient_id
+            WHERE pi.product_id = :product_id
+        """)
+        result = self.session.execute(sql, {"product_id": product_id})
+        ingredients = result.fetchall()
+        ingredients_objects: list[Ingredient] = []
+        for row in ingredients:
+            ingredient_dict = row_to_dict(row)
+            if not ingredient_dict:
+                continue
+            sql_select_tags = text(
+                "SELECT tag FROM ingredient_tags WHERE ingredient_id = :ingredient_id"
+            )
+            tag_results = self.session.execute(
+                sql_select_tags, {"ingredient_id": ingredient_dict["id"]}
+            ).fetchall()
+            tags = [DietTagEnum(tag_row[0]) for tag_row in tag_results]
+
+            ingredient_obj = self._map_row_to_ingredient(ingredient_dict, tags)
+            if ingredient_obj:
+                ingredients_objects.append(ingredient_obj)
+
+        return ingredients_objects
+
 
 class ProductRepository:
     """Repository for product data access operations using raw SQL queries."""
@@ -631,6 +660,7 @@ class ProductRepository:
         brand_filter: None | str = None,
         shop_filter: None | str = None,
         tag_filter: None | list[DietTagEnum] = None,
+        include_ingredients: bool = False,
     ) -> list[Product]:
         """Retrieves products with filtering. Ingredients not fetched for list view performance."""
         try:
@@ -686,8 +716,31 @@ class ProductRepository:
                 ).fetchall()
                 tags = [DietTagEnum(tag_row[0]) for tag_row in tag_results]
 
+                product_ingredients_list: list[Ingredient] = []
+                if include_ingredients:
+                    sql_pi = text("""
+                        SELECT ingredient_id
+                        FROM product_ingredients 
+                        WHERE product_id = :product_id
+                    """)
+                    pi_results = self.session.execute(
+                        sql_pi, {"product_id": row["id"]}
+                    ).fetchall()
+                    for pi_row_tuple in pi_results:
+                        pi_row = row_to_dict(pi_row_tuple)
+                        if not pi_row:
+                            continue
+
+                        ingredient_obj = self._fetch_ingredient_details_for_product(
+                            ingredient_id=pi_row["ingredient_id"],
+                        )
+                        if ingredient_obj:
+                            product_ingredients_list.append(ingredient_obj)
+
                 # Ingredients are not fetched for get_all to improve performance
-                product_model = self._map_row_to_product(row, tags, [])
+                product_model = self._map_row_to_product(
+                    row, tags, product_ingredients_list
+                )
                 if product_model:
                     product_list.append(product_model)
 

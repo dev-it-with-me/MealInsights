@@ -1,27 +1,25 @@
-import { 
-  Card, 
-  Group, 
-  Text, 
-  Button, 
-  Stack, 
-  Badge, 
-  Image, 
+import {
+  Card,
+  Group,
+  Text,
+  Button,
+  Stack,
+  Badge,
+  Image,
   Menu,
   ActionIcon,
-  SimpleGrid
-} from '@/shared/ui-kit';
-import { 
-  IconEdit, 
-  IconTrash, 
-  IconDotsVertical, 
-  IconFlame, 
-  IconUsers 
-} from '@tabler/icons-react';
-import { 
-  IconChefHat
-} from '@tabler/icons-react';
-import { modals } from '@/shared/ui-kit';
-import type { MealListItem } from '@/entities/meal/model/types';
+  SimpleGrid,
+} from "@/shared/ui-kit";
+import {
+  IconEdit,
+  IconTrash,
+  IconDotsVertical,
+  IconFlame,
+  IconUsers,
+} from "@tabler/icons-react";
+import { IconChefHat } from "@tabler/icons-react";
+import { modals } from "@/shared/ui-kit";
+import type { MealListItem } from "@/entities/meal/model/types";
 
 interface MealsListProps {
   meals: MealListItem[];
@@ -30,22 +28,28 @@ interface MealsListProps {
   isLoading?: boolean;
 }
 
-const MealsList = ({ meals, onEdit, onDelete, isLoading = false }: MealsListProps) => {
+const MealsList = ({
+  meals,
+  onEdit,
+  onDelete,
+  isLoading = false,
+}: MealsListProps) => {
   const handleDeleteClick = (meal: MealListItem) => {
     modals.openConfirmModal({
-      title: 'Delete Meal',
+      title: "Delete Meal",
       children: (
         <Text>
-          Are you sure you want to delete "{meal.name}"? This action cannot be undone.
+          Are you sure you want to delete "{meal.name}"? This action cannot be
+          undone.
         </Text>
       ),
-  // Minimal API supports only title/children/onConfirm
+      // Minimal API supports only title/children/onConfirm
       onConfirm: () => onDelete(meal.id),
     });
   };
 
   const formatCalories = (calories?: number | null) => {
-    return calories ? `${Math.round(calories)} cal` : 'N/A';
+    return calories ? `${Math.round(calories)} cal` : "N/A";
   };
 
   const formatTags = (tags: string[]) => {
@@ -58,11 +62,24 @@ const MealsList = ({ meals, onEdit, onDelete, isLoading = false }: MealsListProp
         {Array.from({ length: 6 }).map((_, index) => (
           <Card key={index} shadow="sm" padding="lg" radius="md" withBorder>
             <div>
-              <div style={{ height: 120, backgroundColor: '#f1f3f4' }} />
+              <div style={{ height: 120, backgroundColor: "#f1f3f4" }} />
             </div>
             <Stack gap="xs" mt="md">
-              <div style={{ height: 20, backgroundColor: '#f1f3f4', borderRadius: 4 }} />
-              <div style={{ height: 16, backgroundColor: '#f1f3f4', borderRadius: 4, width: '60%' }} />
+              <div
+                style={{
+                  height: 20,
+                  backgroundColor: "#f1f3f4",
+                  borderRadius: 4,
+                }}
+              />
+              <div
+                style={{
+                  height: 16,
+                  backgroundColor: "#f1f3f4",
+                  borderRadius: 4,
+                  width: "60%",
+                }}
+              />
             </Stack>
           </Card>
         ))}
@@ -99,19 +116,19 @@ const MealsList = ({ meals, onEdit, onDelete, isLoading = false }: MealsListProp
                 fit="cover"
               />
             ) : (
-              <div 
-                style={{ 
-                  height: 120, 
-                  backgroundColor: '#f8f9fa',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
+              <div
+                style={{
+                  height: 120,
+                  backgroundColor: "#f8f9fa",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
                 <IconChefHat size={32} color="gray" />
               </div>
             )}
-            </div>
+          </div>
 
           <Group justify="space-between" mt="md" mb="xs">
             <Text fw={500} size="lg" lineClamp={1}>
@@ -124,14 +141,14 @@ const MealsList = ({ meals, onEdit, onDelete, isLoading = false }: MealsListProp
                 </ActionIcon>
               </Menu.Target>
               <Menu.Dropdown>
-                <Menu.Item 
-                  leftSection={<IconEdit size={14} />}
+                <Menu.Item
+                  leftsection={<IconEdit size={14} />}
                   onClick={() => onEdit(meal)}
                 >
                   Edit
                 </Menu.Item>
-                <Menu.Item 
-                  leftSection={<IconTrash size={14} />}
+                <Menu.Item
+                  leftsection={<IconTrash size={14} />}
                   color="red"
                   onClick={() => handleDeleteClick(meal)}
                 >
@@ -161,7 +178,7 @@ const MealsList = ({ meals, onEdit, onDelete, isLoading = false }: MealsListProp
               <Group gap="xs">
                 {formatTags(meal.tags).map((tag) => (
                   <Badge key={tag} size="xs" variant="light">
-                    {tag.replace('_', ' ')}
+                    {tag.replace("_", " ")}
                   </Badge>
                 ))}
                 {meal.tags.length > 3 && (
@@ -174,19 +191,19 @@ const MealsList = ({ meals, onEdit, onDelete, isLoading = false }: MealsListProp
           </Stack>
 
           <Group justify="space-between" mt="md">
-            <Button 
-              variant="light" 
+            <Button
+              variant="light"
               size="sm"
-              leftSection={<IconEdit size={14} />}
+              leftsection={<IconEdit size={14} />}
               onClick={() => onEdit(meal)}
             >
               Edit
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               color="red"
-              leftSection={<IconTrash size={14} />}
+              leftsection={<IconTrash size={14} />}
               onClick={() => handleDeleteClick(meal)}
             >
               Delete

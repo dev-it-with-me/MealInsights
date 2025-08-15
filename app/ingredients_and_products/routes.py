@@ -6,6 +6,8 @@ Handles HTTP requests and responses for the ingredients_and_products module.
 import logging
 import uuid
 from typing import List, Optional
+import json
+
 
 from fastapi import (
     APIRouter,
@@ -17,9 +19,8 @@ from fastapi import (
     Form,
     HTTPException,
 )
-from sqlalchemy.orm import Session
 
-from app.config import get_db_session
+
 from app.enums import DietTagEnum
 from .schemas import (
     IngredientCreateSchema,
@@ -36,7 +37,8 @@ from .exceptions import (
     IngredientNotFoundError,
     ProductNotFoundError,
 )
-from .models import Ingredient
+from .services import IngredientService, ProductService
+from .models import Ingredient, Macros
 
 logger = logging.getLogger(__name__)
 
@@ -45,38 +47,6 @@ router = APIRouter(prefix="/ingredients-products", tags=["ingredients", "product
 
 
 # Exception handlers have been moved to main.py to avoid APIRouter limitation
-
-
-def convert_ingredient_ids_to_objects(
-    ingredient_ids: list[uuid.UUID], db: Session
-) -> list[Ingredient]:
-    """
-    Convert a list of ingredient IDs to Ingredient objects.
-
-    Args:
-        ingredient_ids: List of ingredient UUIDs
-        db: Database session
-
-    Returns:
-        list[Ingredient]: List of Ingredient objects
-
-    Raises:
-        IngredientNotFoundError: If any ingredient ID is not found
-    """
-    print("Converting ingredient IDs to objects:", ingredient_ids)
-    if not ingredient_ids:
-        return []
-
-    ingredient_service = get_ingredient_service(db)
-    ingredients = []
-
-    for ingredient_id in ingredient_ids:
-        ingredient = ingredient_service.get_ingredient_by_id(ingredient_id)
-        if ingredient is None:
-            raise IngredientNotFoundError(str(ingredient_id))
-        ingredients.append(ingredient)
-
-    return ingredients
 
 
 # ========== INGREDIENT ENDPOINTS ==========
@@ -90,13 +60,13 @@ def convert_ingredient_ids_to_objects(
     description="Create a new ingredient with nutritional information and tags.",
 )
 async def create_ingredient(
-    ingredient_data: IngredientCreateSchema, db: Session = Depends(get_db_session)
+    ingredient_data: IngredientCreateSchema,
+    ingredient_service: IngredientService = Depends(get_ingredient_service),
 ) -> IngredientResponseSchema:
     """Create a new ingredient."""
     try:
         logger.info(f"Creating ingredient: {ingredient_data.name}")
 
-        ingredient_service = get_ingredient_service(db)
         ingredient = ingredient_service.create_ingredient(
             name=ingredient_data.name,
             calories_per_100g_or_ml=ingredient_data.calories_per_100g_or_ml,
@@ -125,13 +95,12 @@ async def search_ingredients(
         ..., description="Pattern to search for in ingredient names"
     ),
     limit: int = Query(10, ge=1, le=100, description="Maximum number of results"),
-    db: Session = Depends(get_db_session),
+    ingredient_service: IngredientService = Depends(get_ingredient_service),
 ) -> List[IngredientResponseSchema]:
     """Search ingredients by name pattern."""
     try:
         logger.info(f"Searching ingredients: pattern='{name_pattern}', limit={limit}")
 
-        ingredient_service = get_ingredient_service(db)
         ingredients = ingredient_service.search_ingredients(name_pattern, limit)
 
         return [IngredientResponseSchema.model_validate(ing) for ing in ingredients]
@@ -149,13 +118,11 @@ async def search_ingredients(
 )
 async def get_ingredients_by_tags(
     tags: List[DietTagEnum] = Query(..., description="List of tags to filter by"),
-    db: Session = Depends(get_db_session),
+    ingredient_service: IngredientService = Depends(get_ingredient_service),
 ) -> List[IngredientResponseSchema]:
     """Get ingredients by tags."""
     try:
         logger.info(f"Getting ingredients by tags: {tags}")
-
-        ingredient_service = get_ingredient_service(db)
         ingredients = ingredient_service.get_ingredients_by_tags(tags)
 
         return [IngredientResponseSchema.model_validate(ing) for ing in ingredients]
@@ -172,13 +139,13 @@ async def get_ingredients_by_tags(
     description="Retrieve a specific ingredient by its unique identifier.",
 )
 async def get_ingredient(
-    ingredient_id: uuid.UUID, db: Session = Depends(get_db_session)
+    ingredient_id: uuid.UUID,
+    ingredient_service: IngredientService = Depends(get_ingredient_service),
 ) -> IngredientResponseSchema:
     """Get a specific ingredient by ID."""
     try:
         logger.info(f"Retrieving ingredient: {ingredient_id}")
 
-        ingredient_service = get_ingredient_service(db)
         ingredient = ingredient_service.get_ingredient_by_id(ingredient_id)
 
         return IngredientResponseSchema.model_validate(ingredient)
@@ -202,13 +169,12 @@ async def list_ingredients(
     name_filter: Optional[str] = Query(None, description="Filter by ingredient name"),
     shop_filter: Optional[str] = Query(None, description="Filter by shop name"),
     tag_filter: Optional[List[DietTagEnum]] = Query(None, description="Filter by tags"),
-    db: Session = Depends(get_db_session),
+    ingredient_service: IngredientService = Depends(get_ingredient_service),
 ) -> IngredientsListSchema:
     """List ingredients with filtering and pagination."""
     try:
         logger.info(f"Listing ingredients: skip={skip}, limit={limit}")
 
-        ingredient_service = get_ingredient_service(db)
         ingredients = ingredient_service.get_all_ingredients(
             skip=skip,
             limit=limit,
@@ -244,13 +210,11 @@ async def list_ingredients(
 async def update_ingredient(
     ingredient_id: uuid.UUID,
     ingredient_data: IngredientUpdateSchema,
-    db: Session = Depends(get_db_session),
+    ingredient_service: IngredientService = Depends(get_ingredient_service),
 ) -> IngredientResponseSchema:
     """Update an existing ingredient."""
     try:
         logger.info(f"Updating ingredient: {ingredient_id}")
-
-        ingredient_service = get_ingredient_service(db)
 
         existing_ingredient = ingredient_service.get_ingredient_by_id(ingredient_id)
 
@@ -259,7 +223,6 @@ async def update_ingredient(
         else:
             photo_data_to_pass = None
 
-        ingredient_service = get_ingredient_service(db)
         ingredient = ingredient_service.update_ingredient(
             ingredient_id=ingredient_id,
             name=ingredient_data.name,
@@ -286,13 +249,13 @@ async def update_ingredient(
     description="Delete an ingredient by its ID.",
 )
 async def delete_ingredient(
-    ingredient_id: uuid.UUID, db: Session = Depends(get_db_session)
+    ingredient_id: uuid.UUID,
+    ingredient_service: IngredientService = Depends(get_ingredient_service),
 ):
     """Delete an ingredient."""
     try:
         logger.info(f"Deleting ingredient: {ingredient_id}")
 
-        ingredient_service = get_ingredient_service(db)
         success = ingredient_service.delete_ingredient(ingredient_id)
 
         if not success:
@@ -317,7 +280,8 @@ async def delete_ingredient(
 )
 async def create_product(
     product_data: ProductCreateSchema,
-    db: Session = Depends(get_db_session),
+    product_service: ProductService = Depends(get_product_service),
+    ingredient_service: IngredientService = Depends(get_ingredient_service),
 ) -> ProductResponseSchema:
     """Create a new product."""
     try:
@@ -326,11 +290,10 @@ async def create_product(
         # Convert ingredient IDs to Ingredient objects
         ingredients = None
         if product_data.ingredients:
-            ingredients = convert_ingredient_ids_to_objects(
-                product_data.ingredients, db
+            ingredients = ingredient_service.convert_ingredient_ids_to_objects(
+                product_data.ingredients
             )
 
-        product_service = get_product_service(db)
         product = product_service.create_product(
             name=product_data.name,
             brand=product_data.brand,
@@ -359,13 +322,12 @@ async def create_product(
 )
 async def get_product(
     product_id: uuid.UUID,
-    db: Session = Depends(get_db_session),
+    product_service: ProductService = Depends(get_product_service),
 ) -> ProductResponseSchema:
     """Get a specific product by ID."""
     try:
         logger.info(f"Retrieving product: {product_id}")
 
-        product_service = get_product_service(db)
         product = product_service.get_product_by_id(product_id)
 
         return ProductResponseSchema.model_validate(product)
@@ -390,13 +352,11 @@ async def list_products(
     brand_filter: Optional[str] = Query(None, description="Filter by brand name"),
     shop_filter: Optional[str] = Query(None, description="Filter by shop name"),
     tag_filter: Optional[List[DietTagEnum]] = Query(None, description="Filter by tags"),
-    db: Session = Depends(get_db_session),
+    product_service: ProductService = Depends(get_product_service),
 ) -> ProductsListSchema:
     """List products with filtering and pagination."""
     try:
         logger.info(f"Listing products: skip={skip}, limit={limit}")
-
-        product_service = get_product_service(db)
         # Note: The service method signature will need to be adjusted based on the actual implementation
         products = product_service.get_all_products(
             skip=skip,
@@ -431,7 +391,8 @@ async def list_products(
 async def update_product(
     product_id: uuid.UUID,
     product_data: ProductUpdateSchema,
-    db: Session = Depends(get_db_session),
+    product_service: ProductService = Depends(get_product_service),
+    ingredient_service: IngredientService = Depends(get_ingredient_service),
 ) -> ProductResponseSchema:
     """Update an existing product."""
     try:
@@ -441,11 +402,9 @@ async def update_product(
         # Convert ingredient IDs to Ingredient objects
         ingredients = None
         if product_data.ingredients is not None:
-            ingredients = convert_ingredient_ids_to_objects(
-                product_data.ingredients, db
+            ingredients = ingredient_service.convert_ingredient_ids_to_objects(
+                product_data.ingredients
             )
-
-        product_service = get_product_service(db)
 
         existing_product = product_service.get_product_by_id(product_id)
 
@@ -484,13 +443,11 @@ async def update_product(
 )
 async def delete_product(
     product_id: uuid.UUID,
-    db: Session = Depends(get_db_session),
+    product_service: ProductService = Depends(get_product_service),
 ):
     """Delete a product."""
     try:
         logger.info(f"Deleting product: {product_id}")
-
-        product_service = get_product_service(db)
         success = product_service.delete_product(product_id)
 
         if not success:
@@ -500,6 +457,24 @@ async def delete_product(
 
     except Exception as e:
         logger.error(f"Error deleting product {product_id}: {e}")
+        raise
+
+
+@router.get(
+    "/ingredients/by-product-id/{product_id}/",
+    summary="Get all product ingredients",
+    description="Retrieve all ingredients associated with a specific product by its ID.",
+)
+async def get_product_ingredients(
+    product_id: uuid.UUID,
+    product_service: ProductService = Depends(get_product_service),
+) -> list[IngredientResponseSchema]:
+    """Get all ingredients for a product."""
+    try:
+        ingredients = product_service.get_product_ingredients(product_id)
+        return [IngredientResponseSchema.model_validate(ing) for ing in ingredients]
+    except Exception as e:
+        logger.error(f"Error retrieving ingredients for product {product_id}: {e}")
         raise
 
 
@@ -514,13 +489,12 @@ async def search_products(
         ..., description="Pattern to search for in product names"
     ),
     limit: int = Query(10, ge=1, le=100, description="Maximum number of results"),
-    db: Session = Depends(get_db_session),
+    product_service: ProductService = Depends(get_product_service),
 ) -> List[ProductResponseSchema]:
     """Search products by name pattern."""
     try:
         logger.info(f"Searching products: pattern='{name_pattern}', limit={limit}")
 
-        product_service = get_product_service(db)
         products = product_service.search_products(name_pattern, limit)
 
         return [ProductResponseSchema.model_validate(prod) for prod in products]
@@ -552,7 +526,7 @@ async def create_ingredient_with_photo(
     macros_saturated_fat: float = Form(...),
     tags: str = Form("[]"),  # JSON string
     photo: UploadFile = File(None),
-    db: Session = Depends(get_db_session),
+    ingredient_service: IngredientService = Depends(get_ingredient_service),
 ) -> IngredientResponseSchema:
     """Create a new ingredient with optional photo upload."""
     import json
@@ -587,7 +561,6 @@ async def create_ingredient_with_photo(
             saturated_fat=macros_saturated_fat,
         )
 
-        ingredient_service = get_ingredient_service(db)
         ingredient = ingredient_service.create_ingredient(
             name=name,
             calories_per_100g_or_ml=calories_per_100g_or_ml,
@@ -627,11 +600,10 @@ async def create_product_with_photo(
     ingredients: str = Form("[]"),  # JSON string with ingredient IDs
     tags: str = Form("[]"),  # JSON string
     photo: UploadFile = File(None),
-    db: Session = Depends(get_db_session),
+    ingredient_service: IngredientService = Depends(get_ingredient_service),
+    product_service: ProductService = Depends(get_product_service),
 ) -> ProductResponseSchema:
     """Create a new product with optional photo upload."""
-    import json
-    from app.models import Macros
 
     try:
         logger.info(f"Creating product with photo: {name}")
@@ -669,9 +641,10 @@ async def create_product_with_photo(
         # Convert ingredient IDs to Ingredient objects
         ingredients_list = None
         if ingredient_ids:
-            ingredients_list = convert_ingredient_ids_to_objects(ingredient_ids, db)
+            ingredients_list = ingredient_service.convert_ingredient_ids_to_objects(
+                ingredient_ids
+            )
 
-        product_service = get_product_service(db)
         product = product_service.create_product(
             name=name,
             brand=brand if brand else None,
@@ -715,7 +688,7 @@ async def update_ingredient_with_photo(
     macros_saturated_fat: float = Form(...),
     tags: str = Form("[]"),  # JSON string
     photo: UploadFile = File(None),
-    db: Session = Depends(get_db_session),
+    ingredient_service: IngredientService = Depends(get_ingredient_service),
 ) -> IngredientResponseSchema:
     """Update an existing ingredient with optional photo upload."""
     import json
@@ -750,7 +723,6 @@ async def update_ingredient_with_photo(
             saturated_fat=macros_saturated_fat,
         )
 
-        ingredient_service = get_ingredient_service(db)
         ingredient = ingredient_service.update_ingredient(
             ingredient_id=ingredient_id,
             name=name,
@@ -798,7 +770,8 @@ async def update_product_with_photo(
     ),  # JSON string with ingredient IDs, None if not to be changed
     tags: Optional[str] = Form(None),  # JSON string, None if not to be changed
     photo: Optional[UploadFile] = File(None),
-    db: Session = Depends(get_db_session),
+    ingredient_service: IngredientService = Depends(get_ingredient_service),
+    product_service: ProductService = Depends(get_product_service),
 ) -> ProductResponseSchema:
     """Update an existing product with optional photo upload."""
     import json
@@ -890,11 +863,11 @@ async def update_product_with_photo(
         if (
             parsed_ingredient_ids is not None
         ):  # If ingredients JSON was provided (even if "[]")
-            ingredients_list_for_service = convert_ingredient_ids_to_objects(
-                parsed_ingredient_ids, db
+            ingredients_list_for_service = (
+                ingredient_service.convert_ingredient_ids_to_objects(
+                    parsed_ingredient_ids
+                )
             )
-
-        product_service = get_product_service(db)
         updated_product = product_service.update_product(
             product_id=product_id,
             name=name,  # Name is required by Form(...)

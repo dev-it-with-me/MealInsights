@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   TextInput,
   Stack,
@@ -10,11 +10,11 @@ import {
   Loader,
   Alert,
   Button,
-} from '@/shared/ui-kit';
-import { IconSearch, IconAlertCircle } from '@tabler/icons-react';
-import { useDebouncedValue } from '@/shared/ui-kit';
-import { useMealSearch } from '../../entities/diet-planning/api/hooks';
-import type { MealListItem } from '../../entities/meal/model/types';
+} from "@/shared/ui-kit";
+import { IconSearch, IconAlertCircle } from "@tabler/icons-react";
+import { useDebouncedValue } from "@/shared/ui-kit";
+import { useMealSearch } from "../../entities/diet-planning/api/hooks";
+import type { MealListItem } from "../../entities/meal/model/types";
 
 export interface MealSearchSelectProps {
   value: string | null;
@@ -27,24 +27,24 @@ export const MealSearchSelect = ({
   onChange,
   placeholder = "Search for meals...",
 }: MealSearchSelectProps) => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery] = useDebouncedValue(searchQuery, 300);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedMeal, setSelectedMeal] = useState<MealListItem | null>(null);
 
   // Search for meals
-  const { 
-    data: searchResults, 
-    isLoading, 
-    error 
+  const {
+    data: searchResults,
+    isLoading,
+    error,
   } = useMealSearch(debouncedQuery, {
-    enabled: debouncedQuery.length > 0
+    enabled: debouncedQuery.length > 0,
   });
 
   // Find selected meal when value changes
   useEffect(() => {
     if (value && searchResults) {
-      const meal = searchResults.find(m => m.id === value);
+      const meal = searchResults.find((m) => m.id === value);
       setSelectedMeal(meal || null);
     } else {
       setSelectedMeal(null);
@@ -61,13 +61,13 @@ export const MealSearchSelect = ({
   const handleClearSelection = () => {
     setSelectedMeal(null);
     onChange(null);
-    setSearchQuery('');
+    setSearchQuery("");
   };
 
   const handleInputChange = (value: string) => {
     setSearchQuery(value);
     setIsOpen(true);
-    
+
     // Clear selection if user starts typing
     if (selectedMeal && value !== selectedMeal.name) {
       setSelectedMeal(null);
@@ -85,31 +85,37 @@ export const MealSearchSelect = ({
   };
 
   return (
-    <Stack gap="xs" style={{ position: 'relative' }}>
+    <Stack gap="xs" style={{ position: "relative" }}>
       <TextInput
         placeholder={placeholder}
         value={searchQuery}
-  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleInputChange(e.target.value)}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          handleInputChange(e.target.value)
+        }
         onFocus={handleInputFocus}
         onBlur={handleInputBlur}
-        leftSection={<IconSearch size={16} />}
-        rightSection={selectedMeal && (
-          <Button
-            size="xs"
-            variant="subtle"
-            color="gray"
-            onClick={handleClearSelection}
-          >
-            Clear
-          </Button>
-        )}
+        leftsection={<IconSearch size={16} />}
+        rightsection={
+          selectedMeal && (
+            <Button
+              size="xs"
+              variant="subtle"
+              color="gray"
+              onClick={handleClearSelection}
+            >
+              Clear
+            </Button>
+          )
+        }
       />
 
       {/* Selected Meal Display */}
       {selectedMeal && (
         <Card p="sm" withBorder bg="blue.0">
           <Group justify="space-between">
-            <Text size="sm" fw={500}>{selectedMeal.name}</Text>
+            <Text size="sm" fw={500}>
+              {selectedMeal.name}
+            </Text>
             <Badge size="sm" variant="light" color="green">
               {Math.round(selectedMeal.calories_total || 0)} cal
             </Badge>
@@ -124,19 +130,21 @@ export const MealSearchSelect = ({
           withBorder
           shadow="md"
           style={{
-            position: 'absolute',
-            top: '100%',
+            position: "absolute",
+            top: "100%",
             left: 0,
             right: 0,
             zIndex: 1000,
-            maxHeight: '300px',
+            maxHeight: "300px",
           }}
         >
           <ScrollArea mah={300}>
             {isLoading ? (
               <Group justify="center" p="md">
                 <Loader size="sm" />
-                <Text size="sm" c="dimmed">Searching meals...</Text>
+                <Text size="sm" c="dimmed">
+                  Searching meals...
+                </Text>
               </Group>
             ) : error ? (
               <Alert icon={<IconAlertCircle size={16} />} color="red" m="sm">
@@ -149,16 +157,17 @@ export const MealSearchSelect = ({
                     key={meal.id}
                     p="sm"
                     style={{
-                      cursor: 'pointer',
+                      cursor: "pointer",
                       borderRadius: 0,
-                      border: 'none',
+                      border: "none",
                     }}
                     onClick={() => handleMealSelect(meal)}
                     onMouseEnter={(e: React.MouseEvent<HTMLDivElement>) => {
-                      e.currentTarget.style.backgroundColor = 'var(--mantine-color-gray-0)';
+                      e.currentTarget.style.backgroundColor =
+                        "var(--mantine-color-gray-0)";
                     }}
                     onMouseLeave={(e: React.MouseEvent<HTMLDivElement>) => {
-                      e.currentTarget.style.backgroundColor = 'transparent';
+                      e.currentTarget.style.backgroundColor = "transparent";
                     }}
                   >
                     <Group justify="space-between">

@@ -33,6 +33,7 @@ import type {
   CreateProductRequest,
   UpdateProductRequest,
 } from "@/entities/product/model/types";
+import type { Ingredient } from "@/entities/ingredient/model/types";
 
 interface AddEditProductFormProps {
   isOpen: boolean;
@@ -41,6 +42,8 @@ interface AddEditProductFormProps {
   product?: Product | null;
   isEditing?: boolean;
   onSuccess?: () => void;
+  productIngredients?: Ingredient[];
+  isLoadingProductIngredients?: boolean;
 }
 
 const dietTagOptions = Object.values(DietTagEnum).map((tag) => ({
@@ -55,6 +58,8 @@ const AddEditProductForm = ({
   product,
   isEditing,
   onSuccess,
+  productIngredients = [],
+  isLoadingProductIngredients = false,
 }: AddEditProductFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<File | null>(null);
@@ -62,6 +67,7 @@ const AddEditProductForm = ({
   const [photoRemoved, setPhotoRemoved] = useState(false); // Track if user wants to remove existing photo
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editingMode = isEditing ?? !!product;
+  const formRef = useRef<HTMLFormElement>(null);
 
   const schema = editingMode
     ? updateProductRequestSchema
@@ -90,7 +96,7 @@ const AddEditProductForm = ({
             saturated_fat: 0,
           },
           package_size_g_or_ml: product?.package_size_g_or_ml || 0,
-          ingredients: product?.ingredients || [],
+          ingredients: productIngredients.map((ing) => ing.id),
           tags: product?.tags || [],
         }
       : {
@@ -128,7 +134,7 @@ const AddEditProductForm = ({
           saturated_fat: 0,
         },
         package_size_g_or_ml: product.package_size_g_or_ml || 0,
-        ingredients: product.ingredients || [],
+        ingredients: productIngredients.map((ing) => ing.id),
         tags: product.tags,
       });
       setSelectedPhoto(null); // Reset photo for editing
@@ -261,6 +267,12 @@ const AddEditProductForm = ({
     onClose();
   };
 
+  const handleSubmitClick = () => {
+    if (formRef.current) {
+      formRef.current.requestSubmit();
+    }
+  };
+
   return (
     <Modal
       opened={isOpen}
@@ -269,13 +281,13 @@ const AddEditProductForm = ({
       size="xl"
       footer={
         <Group justify="flex-end" mt="lg">
-          <Button type="submit" loading={isSubmitting}>
+          <Button onClick={handleSubmitClick} loading={isSubmitting}>
             {editingMode ? "Update Product" : "Create Product"}
           </Button>
         </Group>
       }
     >
-      <form onSubmit={handleSubmit(handleFormSubmit)}>
+      <form onSubmit={handleSubmit(handleFormSubmit)} ref={formRef}>
         <Stack gap="md">
           {/* Basic Information */}
           <Title order={4}>Basic Information</Title>

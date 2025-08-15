@@ -315,7 +315,7 @@ const AddEditMealForm = ({
           <Button
             type="submit"
             loading={submitting || isLoading}
-            leftSection={<IconChefHat size={16} />}
+            leftsection={<IconChefHat size={16} />}
           >
             {meal ? "Update Meal" : "Create Meal"}
           </Button>
@@ -336,7 +336,7 @@ const AddEditMealForm = ({
             label="Meal Photo"
             placeholder="Upload a photo of the meal"
             accept="image/*"
-            leftSection={<IconPhoto size={16} />}
+            leftsection={<IconPhoto size={16} />}
             onChange={(file: File | null) => handleFileUpload(file as any)}
           />
 
@@ -379,7 +379,7 @@ const AddEditMealForm = ({
             />
             <Button
               variant="light"
-              leftSection={<IconCalculator size={16} />}
+              leftsection={<IconCalculator size={16} />}
               disabled={
                 !form.values.is_nutrition_calculated ||
                 form.values.ingredients.length === 0

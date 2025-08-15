@@ -161,7 +161,7 @@ const ManageMealsPage = () => {
             description="Create, and edit your meal recipes"
             rightContent={
               <Button
-                leftSection={<IconPlus size={16} />}
+                leftsection={<IconPlus size={16} />}
                 onClick={openAddMealForm}
                 size="sm"
                 color="primary"

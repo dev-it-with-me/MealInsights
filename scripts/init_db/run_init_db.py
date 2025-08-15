@@ -255,8 +255,6 @@ product_ingredients_table = Table(
         ForeignKey("ingredients.id", ondelete="RESTRICT"),
         primary_key=True,
     ),
-    Column("quantity", REAL, nullable=False),
-    sqlalchemy.CheckConstraint("quantity >= 0", name="ck_product_ingredients_quantity"),
 )
 
 # --- Meals Tables ---

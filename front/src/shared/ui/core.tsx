@@ -163,7 +163,7 @@ export const Badge: React.FC<any> = ({
 
 export type ButtonProps = any;
 export const Button: React.FC<any> = ({
-  leftSection,
+  leftsection,
   variant = "filled",
   size = "md",
   loading,
@@ -248,8 +248,8 @@ export const Button: React.FC<any> = ({
         className
       )}
     >
-      {leftSection && (
-        <span className="mr-1.5 inline-flex items-center">{leftSection}</span>
+      {leftsection && (
+        <span className="mr-1.5 inline-flex items-center">{leftsection}</span>
       )}
       {loading && <span className="loading loading-spinner mr-1.5"></span>}
       {children}
@@ -843,15 +843,15 @@ Menu.Dropdown = ({ children }: any) => (
     {children}
   </div>
 );
-Menu.Item = ({ children, leftSection, onClick }: any) => {
+Menu.Item = ({ children, leftsection, onClick }: any) => {
   return (
     <button
       onClick={onClick}
       className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-gradient-to-r hover:from-surface-700/60 hover:to-surface-600/60 text-left transition-all duration-200 ease-out group"
     >
-      {leftSection && (
+      {leftsection && (
         <span className="text-surface-300 group-hover:text-surface-200 transition-colors duration-200">
-          {leftSection}
+          {leftsection}
         </span>
       )}
       <span className="flex-1 font-medium group-hover:text-surface-100 transition-colors duration-200">
@@ -997,7 +997,7 @@ export const FileInput: React.FC<{
   label?: string;
   placeholder?: string;
   accept?: string;
-  leftSection?: React.ReactNode;
+  leftsection?: React.ReactNode;
   onChange?: (file: File | null) => void;
 }> = ({ label, accept, onChange }) => {
   const handleChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {

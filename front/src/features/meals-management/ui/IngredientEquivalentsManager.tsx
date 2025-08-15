@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   Stack,
   Select,
@@ -14,30 +14,30 @@ import {
   Paper,
   Loader,
   Alert,
-} from '@/shared/ui-kit';
-import { useDebouncedValue } from '@/shared/ui-kit';
-import { notifications } from '@/shared/ui-kit';
-import { 
-  IconSearch, 
-  IconPlus, 
-  IconTrash, 
-  IconLeaf, 
+} from "@/shared/ui-kit";
+import { useDebouncedValue } from "@/shared/ui-kit";
+import { notifications } from "@/shared/ui-kit";
+import {
+  IconSearch,
+  IconPlus,
+  IconTrash,
+  IconLeaf,
   IconShoppingCart,
-  IconInfoCircle
-} from '@tabler/icons-react';
-import { ingredientApi } from '@/entities/ingredient/api/ingredientApi';
-import { productApi } from '@/entities/product/api/productApi';
-import type { Ingredient } from '@/entities/ingredient/model/types';
-import type { Product } from '@/entities/product/model/types';
-import type { MealIngredient } from './IngredientSelectorForMeal';
+  IconInfoCircle,
+} from "@tabler/icons-react";
+import { ingredientApi } from "@/entities/ingredient/api/ingredientApi";
+import { productApi } from "@/entities/product/api/productApi";
+import type { Ingredient } from "@/entities/ingredient/model/types";
+import type { Product } from "@/entities/product/model/types";
+import type { MealIngredient } from "./IngredientSelectorForMeal";
 
 export interface MealEquivalent {
   originalIngredientId: string;
   originalIngredientName: string;
-  originalIngredientType: 'ingredient' | 'product';
+  originalIngredientType: "ingredient" | "product";
   equivalentIngredientId: string;
   equivalentIngredientName: string;
-  equivalentIngredientType: 'ingredient' | 'product';
+  equivalentIngredientType: "ingredient" | "product";
   conversionRatio?: number; // Optional conversion ratio (e.g., 1 cup = 240ml)
   notes?: string;
 }
@@ -45,7 +45,7 @@ export interface MealEquivalent {
 interface EquivalentSearchResult {
   id: string;
   name: string;
-  type: 'ingredient' | 'product';
+  type: "ingredient" | "product";
   brand?: string | null;
   tags: string[];
 }
@@ -61,12 +61,15 @@ export const IngredientEquivalentsManager = ({
   equivalents,
   onEquivalentsChange,
 }: IngredientEquivalentsManagerProps) => {
-  const [selectedIngredientId, setSelectedIngredientId] = useState<string>('');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedIngredientId, setSelectedIngredientId] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch] = useDebouncedValue(searchQuery, 300);
-  const [searchResults, setSearchResults] = useState<EquivalentSearchResult[]>([]);
+  const [searchResults, setSearchResults] = useState<EquivalentSearchResult[]>(
+    []
+  );
   const [isSearching, setIsSearching] = useState(false);
-  const [selectedEquivalent, setSelectedEquivalent] = useState<EquivalentSearchResult | null>(null);
+  const [selectedEquivalent, setSelectedEquivalent] =
+    useState<EquivalentSearchResult | null>(null);
 
   // Get options for ingredient dropdown
   const ingredientOptions = selectedIngredients.map((ingredient) => ({
@@ -75,13 +78,16 @@ export const IngredientEquivalentsManager = ({
   }));
 
   // Get currently selected ingredient details
-  const selectedIngredient = selectedIngredients.find((ingredient) => 
-    `${ingredient.type}-${ingredient.id}` === selectedIngredientId
+  const selectedIngredient = selectedIngredients.find(
+    (ingredient) =>
+      `${ingredient.type}-${ingredient.id}` === selectedIngredientId
   );
 
   // Get equivalents for selected ingredient
-  const currentEquivalents = equivalents.filter((equiv) => 
-    `${equiv.originalIngredientType}-${equiv.originalIngredientId}` === selectedIngredientId
+  const currentEquivalents = equivalents.filter(
+    (equiv) =>
+      `${equiv.originalIngredientType}-${equiv.originalIngredientId}` ===
+      selectedIngredientId
   );
 
   // Search for equivalent ingredients and products
@@ -95,56 +101,60 @@ export const IngredientEquivalentsManager = ({
       setIsSearching(true);
       try {
         const [ingredientsResponse, productsResponse] = await Promise.all([
-          ingredientApi.getIngredients({ 
-            name_filter: debouncedSearch, 
-            limit: 15 
+          ingredientApi.getIngredients({
+            name_filter: debouncedSearch,
+            limit: 15,
           }),
-          productApi.getProducts({ 
-            name_filter: debouncedSearch, 
-            limit: 15 
-          })
+          productApi.getProducts({
+            name_filter: debouncedSearch,
+            limit: 15,
+          }),
         ]);
 
-        const ingredients: EquivalentSearchResult[] = ingredientsResponse.ingredients.map((ingredient: Ingredient) => ({
-          id: ingredient.id,
-          name: ingredient.name,
-          type: 'ingredient' as const,
-          tags: ingredient.tags || [],
-        }));
+        const ingredients: EquivalentSearchResult[] =
+          ingredientsResponse.ingredients.map((ingredient: Ingredient) => ({
+            id: ingredient.id,
+            name: ingredient.name,
+            type: "ingredient" as const,
+            tags: ingredient.tags || [],
+          }));
 
-        const products: EquivalentSearchResult[] = productsResponse.products.map((product: Product) => ({
-          id: product.id,
-          name: product.name,
-          type: 'product' as const,
-          brand: product.brand,
-          tags: product.tags || [],
-        }));
+        const products: EquivalentSearchResult[] =
+          productsResponse.products.map((product: Product) => ({
+            id: product.id,
+            name: product.name,
+            type: "product" as const,
+            brand: product.brand,
+            tags: product.tags || [],
+          }));
 
         // Filter out items that are already in the meal or already added as equivalents
         const allResults = [...ingredients, ...products];
         const filteredResults = allResults.filter((item) => {
           const itemKey = `${item.type}-${item.id}`;
-          
+
           // Don't show if it's already in the meal
-          const isInMeal = selectedIngredients.some(mealItem => 
-            `${mealItem.type}-${mealItem.id}` === itemKey
+          const isInMeal = selectedIngredients.some(
+            (mealItem) => `${mealItem.type}-${mealItem.id}` === itemKey
           );
-          
-          // Don't show if it's already an equivalent for the selected ingredient  
-          const isAlreadyEquivalent = currentEquivalents.some(equiv =>
-            `${equiv.equivalentIngredientType}-${equiv.equivalentIngredientId}` === itemKey
+
+          // Don't show if it's already an equivalent for the selected ingredient
+          const isAlreadyEquivalent = currentEquivalents.some(
+            (equiv) =>
+              `${equiv.equivalentIngredientType}-${equiv.equivalentIngredientId}` ===
+              itemKey
           );
-          
+
           return !isInMeal && !isAlreadyEquivalent;
         });
 
         setSearchResults(filteredResults);
       } catch (error) {
-        console.error('Equivalent search failed:', error);
+        console.error("Equivalent search failed:", error);
         notifications.show({
-          title: 'Search Error',
-          message: 'Failed to search for equivalent ingredients',
-          color: 'red',
+          title: "Search Error",
+          message: "Failed to search for equivalent ingredients",
+          color: "red",
         });
       } finally {
         setIsSearching(false);
@@ -161,9 +171,9 @@ export const IngredientEquivalentsManager = ({
   const handleAddEquivalent = () => {
     if (!selectedIngredient || !selectedEquivalent) {
       notifications.show({
-        title: 'Invalid Selection',
-        message: 'Please select both an ingredient and an equivalent',
-        color: 'orange',
+        title: "Invalid Selection",
+        message: "Please select both an ingredient and an equivalent",
+        color: "orange",
       });
       return;
     }
@@ -178,39 +188,46 @@ export const IngredientEquivalentsManager = ({
     };
 
     onEquivalentsChange([...equivalents, newEquivalent]);
-    
+
     // Reset search
     setSelectedEquivalent(null);
-    setSearchQuery('');
+    setSearchQuery("");
     setSearchResults([]);
 
     notifications.show({
-      title: 'Equivalent Added',
+      title: "Equivalent Added",
       message: `${selectedEquivalent.name} added as equivalent for ${selectedIngredient.name}`,
-      color: 'green',
+      color: "green",
     });
   };
 
   const handleRemoveEquivalent = (equivalentToRemove: MealEquivalent) => {
-    const newEquivalents = equivalents.filter((equiv) => 
-      !(equiv.originalIngredientId === equivalentToRemove.originalIngredientId &&
-        equiv.originalIngredientType === equivalentToRemove.originalIngredientType &&
-        equiv.equivalentIngredientId === equivalentToRemove.equivalentIngredientId &&
-        equiv.equivalentIngredientType === equivalentToRemove.equivalentIngredientType)
+    const newEquivalents = equivalents.filter(
+      (equiv) =>
+        !(
+          equiv.originalIngredientId ===
+            equivalentToRemove.originalIngredientId &&
+          equiv.originalIngredientType ===
+            equivalentToRemove.originalIngredientType &&
+          equiv.equivalentIngredientId ===
+            equivalentToRemove.equivalentIngredientId &&
+          equiv.equivalentIngredientType ===
+            equivalentToRemove.equivalentIngredientType
+        )
     );
-    
+
     onEquivalentsChange(newEquivalents);
-    
+
     notifications.show({
-      title: 'Equivalent Removed',
-      message: 'Equivalent ingredient removed',
-      color: 'blue',
+      title: "Equivalent Removed",
+      message: "Equivalent ingredient removed",
+      color: "blue",
     });
   };
 
   // Reset search when ingredient selection changes
   useEffect(() => {
-    setSearchQuery('');
+    setSearchQuery("");
     setSearchResults([]);
     setSelectedEquivalent(null);
   }, [selectedIngredientId]);
@@ -230,7 +247,9 @@ export const IngredientEquivalentsManager = ({
         label="Select Meal Ingredient to Manage Equivalents"
         placeholder="Choose an ingredient from your meal"
         value={selectedIngredientId}
-  onChange={(value: string | null) => setSelectedIngredientId(value || '')}
+        onChange={(value: string | null) =>
+          setSelectedIngredientId(value || "")
+        }
         data={ingredientOptions}
         searchable
         clearable
@@ -240,7 +259,7 @@ export const IngredientEquivalentsManager = ({
         <Card withBorder p="md">
           <Stack gap="sm">
             <Group>
-              {selectedIngredient.type === 'ingredient' ? (
+              {selectedIngredient.type === "ingredient" ? (
                 <IconLeaf size={16} color="green" />
               ) : (
                 <IconShoppingCart size={16} color="blue" />
@@ -248,7 +267,13 @@ export const IngredientEquivalentsManager = ({
               <Text fw={500}>
                 Managing equivalents for: {selectedIngredient.name}
               </Text>
-              <Badge size="sm" variant="light" color={selectedIngredient.type === 'ingredient' ? 'green' : 'blue'}>
+              <Badge
+                size="sm"
+                variant="light"
+                color={
+                  selectedIngredient.type === "ingredient" ? "green" : "blue"
+                }
+              >
                 {selectedIngredient.type}
               </Badge>
             </Group>
@@ -257,9 +282,11 @@ export const IngredientEquivalentsManager = ({
             <TextInput
               placeholder="Search for equivalent ingredients or products..."
               value={searchQuery}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-              leftSection={<IconSearch size={16} />}
-              rightSection={isSearching ? <Loader size={16} /> : null}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setSearchQuery(e.target.value)
+              }
+              leftsection={<IconSearch size={16} />}
+              rightsection={isSearching ? <Loader size={16} /> : null}
             />
 
             {/* Search Results */}
@@ -271,26 +298,44 @@ export const IngredientEquivalentsManager = ({
                       <Paper
                         key={`${item.type}-${item.id}`}
                         p="xs"
-                        withBorder={selectedEquivalent?.id === item.id && selectedEquivalent?.type === item.type}
-                        style={{ 
-                          cursor: 'pointer',
-                          backgroundColor: selectedEquivalent?.id === item.id && selectedEquivalent?.type === item.type ? 'var(--mantine-color-blue-light)' : undefined
+                        withBorder={
+                          selectedEquivalent?.id === item.id &&
+                          selectedEquivalent?.type === item.type
+                        }
+                        style={{
+                          cursor: "pointer",
+                          backgroundColor:
+                            selectedEquivalent?.id === item.id &&
+                            selectedEquivalent?.type === item.type
+                              ? "var(--mantine-color-blue-light)"
+                              : undefined,
                         }}
                         onClick={() => setSelectedEquivalent(item)}
                       >
                         <Group justify="space-between">
                           <Group gap="xs">
-                            {item.type === 'ingredient' ? (
+                            {item.type === "ingredient" ? (
                               <IconLeaf size={14} color="green" />
                             ) : (
                               <IconShoppingCart size={14} color="blue" />
                             )}
                             <Text size="sm" fw={500}>
                               {item.name}
-                              {item.brand && <Text span size="xs" c="dimmed"> • {item.brand}</Text>}
+                              {item.brand && (
+                                <Text span size="xs" c="dimmed">
+                                  {" "}
+                                  • {item.brand}
+                                </Text>
+                              )}
                             </Text>
                           </Group>
-                          <Badge size="xs" variant="light" color={item.type === 'ingredient' ? 'green' : 'blue'}>
+                          <Badge
+                            size="xs"
+                            variant="light"
+                            color={
+                              item.type === "ingredient" ? "green" : "blue"
+                            }
+                          >
                             {item.type}
                           </Badge>
                         </Group>
@@ -306,12 +351,20 @@ export const IngredientEquivalentsManager = ({
               <Paper withBorder p="sm" bg="gray.0">
                 <Group justify="space-between">
                   <Text size="sm">
-                    Adding equivalent: <Text span fw={500}>{selectedEquivalent.name}</Text>
-                    {selectedEquivalent.brand && <Text span size="xs" c="dimmed"> ({selectedEquivalent.brand})</Text>}
+                    Adding equivalent:{" "}
+                    <Text span fw={500}>
+                      {selectedEquivalent.name}
+                    </Text>
+                    {selectedEquivalent.brand && (
+                      <Text span size="xs" c="dimmed">
+                        {" "}
+                        ({selectedEquivalent.brand})
+                      </Text>
+                    )}
                   </Text>
                   <Button
                     size="sm"
-                    leftSection={<IconPlus size={14} />}
+                    leftsection={<IconPlus size={14} />}
                     onClick={handleAddEquivalent}
                   >
                     Add Equivalent
@@ -338,10 +391,20 @@ export const IngredientEquivalentsManager = ({
                     {currentEquivalents.map((equiv, index) => (
                       <Table.Tr key={`equiv-${index}`}>
                         <Table.Td>
-                          <Text size="sm">{equiv.equivalentIngredientName}</Text>
+                          <Text size="sm">
+                            {equiv.equivalentIngredientName}
+                          </Text>
                         </Table.Td>
                         <Table.Td>
-                          <Badge size="sm" variant="light" color={equiv.equivalentIngredientType === 'ingredient' ? 'green' : 'blue'}>
+                          <Badge
+                            size="sm"
+                            variant="light"
+                            color={
+                              equiv.equivalentIngredientType === "ingredient"
+                                ? "green"
+                                : "blue"
+                            }
+                          >
                             {equiv.equivalentIngredientType}
                           </Badge>
                         </Table.Td>
@@ -391,7 +454,7 @@ export const IngredientEquivalentsManager = ({
                   <Table.Tr key={`summary-equiv-${index}`}>
                     <Table.Td>
                       <Group gap="xs">
-                        {equiv.originalIngredientType === 'ingredient' ? (
+                        {equiv.originalIngredientType === "ingredient" ? (
                           <IconLeaf size={14} color="green" />
                         ) : (
                           <IconShoppingCart size={14} color="blue" />
@@ -401,7 +464,7 @@ export const IngredientEquivalentsManager = ({
                     </Table.Td>
                     <Table.Td>
                       <Group gap="xs">
-                        {equiv.equivalentIngredientType === 'ingredient' ? (
+                        {equiv.equivalentIngredientType === "ingredient" ? (
                           <IconLeaf size={14} color="green" />
                         ) : (
                           <IconShoppingCart size={14} color="blue" />

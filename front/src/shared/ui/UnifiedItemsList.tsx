@@ -121,7 +121,7 @@ const UnifiedItemsList = ({
           {onAddIngredient && (
             <Button
               onClick={onAddIngredient}
-              leftSection={<IconLeaf size={16} />}
+              leftsection={<IconLeaf size={16} />}
               variant="gradient"
               gradient={{ from: "primary", to: "primary.6" }}
               size="sm"
@@ -132,7 +132,7 @@ const UnifiedItemsList = ({
           {onAddProduct && (
             <Button
               onClick={onAddProduct}
-              leftSection={<IconChefHat size={16} />}
+              leftsection={<IconChefHat size={16} />}
               variant="gradient"
               gradient={{ from: "secondary", to: "secondary.6" }}
               size="sm"
@@ -218,7 +218,7 @@ const UnifiedItemsList = ({
                           : undefined
                       }
                       color={isActive ? undefined : "gray"}
-                      leftSection={
+                      leftsection={
                         IconComponent ? <IconComponent size={16} /> : undefined
                       }
                       size="xs"
@@ -492,7 +492,7 @@ const UnifiedItemsList = ({
                       >
                         {onView && (
                           <Menu.Item
-                            leftSection={<IconEye size={14} />}
+                            leftsection={<IconEye size={14} />}
                             onClick={() => onView(item)}
                             style={{ color: "var(--color-surface-200)" }}
                           >
@@ -501,7 +501,7 @@ const UnifiedItemsList = ({
                         )}
                         {onEdit && (
                           <Menu.Item
-                            leftSection={<IconEdit size={14} />}
+                            leftsection={<IconEdit size={14} />}
                             onClick={() => onEdit(item)}
                             style={{ color: "var(--color-surface-200)" }}
                           >
@@ -510,7 +510,7 @@ const UnifiedItemsList = ({
                         )}
                         {onDelete && (
                           <Menu.Item
-                            leftSection={<IconTrash size={14} />}
+                            leftsection={<IconTrash size={14} />}
                             color={
                               deleteConfirm === item.id ? "red" : undefined
                             }

@@ -92,6 +92,36 @@ class IngredientService:
         """
         return self.repository.get_by_id(ingredient_id)
 
+    def convert_ingredient_ids_to_objects(
+        self, ingredient_ids: list[uuid.UUID]
+    ) -> list[Ingredient]:
+        """
+        Convert a list of ingredient IDs to Ingredient objects.
+
+        Args:
+            ingredient_ids: List of ingredient UUIDs
+            db: Database session
+
+        Returns:
+            list[Ingredient]: List of Ingredient objects
+
+        Raises:
+            IngredientNotFoundError: If any ingredient ID is not found
+        """
+        print("Converting ingredient IDs to objects:", ingredient_ids)
+        if not ingredient_ids:
+            return []
+
+        ingredients = []
+
+        for ingredient_id in ingredient_ids:
+            ingredient = self.get_ingredient_by_id(ingredient_id)
+            if ingredient is None:
+                raise IngredientNotFoundError(str(ingredient_id))
+            ingredients.append(ingredient)
+
+        return ingredients
+
     def get_all_ingredients(
         self,
         skip: int = 0,
@@ -398,6 +428,27 @@ class ProductService:
             ProductNotFoundError: If product not found
         """
         return self.repository.get_by_id(product_id)
+
+    def get_product_ingredients(self, product_id: uuid.UUID) -> list[Ingredient]:
+        """
+        Get all ingredients for a product.
+
+        Args:
+            product_id: The product ID
+
+        Returns:
+            list[Ingredient]: The list of ingredients for the product
+
+        Raises:
+            ProductNotFoundError: If product not found
+        """
+        ingredients: list[Ingredient] = (
+            self.ingredient_repository.get_product_ingredients(product_id)
+        )
+        if not ingredients:
+            raise ProductNotFoundError(f"Product with ID {product_id} not found")
+
+        return ingredients
 
     def get_all_products(
         self,

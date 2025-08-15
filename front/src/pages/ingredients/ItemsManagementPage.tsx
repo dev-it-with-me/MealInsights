@@ -50,6 +50,27 @@ const ItemsManagementPage = () => {
   );
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [filters, setFilters] = useState<UnifiedItemFilters>({});
+  const [productIngredients, setProductIngredients] = useState<Ingredient[]>(
+    []
+  );
+  const [isLoadingProductIngredients, setIsLoadingProductIngredients] =
+    useState(false);
+
+  const loadProductIngredients = async (productId: string) => {
+    setIsLoadingProductIngredients(true);
+    try {
+      const ingredients = await ingredientApi.getProductIngredients(productId);
+      setProductIngredients(ingredients);
+    } catch (error) {
+      notifications.show({
+        title: "Error",
+        message: "Failed to load product ingredients",
+        color: "red",
+      });
+    } finally {
+      setIsLoadingProductIngredients(false);
+    }
+  };
 
   useEffect(() => {
     loadAllItems();
@@ -425,12 +446,13 @@ const ItemsManagementPage = () => {
     }
   };
 
-  const handleEditItem = (item: UnifiedItem) => {
+  const handleEditItem = async (item: UnifiedItem) => {
     if (item.type === "ingredient" && item.ingredient) {
       setEditingIngredient(item.ingredient);
       setIsIngredientFormOpen(true);
     } else if (item.type === "product" && item.product) {
       setEditingProduct(item.product);
+      await loadProductIngredients(item.product.id);
       setIsProductFormOpen(true);
     }
   };
@@ -443,6 +465,7 @@ const ItemsManagementPage = () => {
   const handleAddProduct = () => {
     console.debug("ItemsManagementPage: handleAddProduct fired");
     setEditingProduct(null);
+    setProductIngredients([]);
     setIsProductFormOpen(true);
   };
 
@@ -454,6 +477,7 @@ const ItemsManagementPage = () => {
   const handleProductFormClose = () => {
     setIsProductFormOpen(false);
     setEditingProduct(null);
+    setProductIngredients([]);
   };
 
   return (
@@ -503,6 +527,8 @@ const ItemsManagementPage = () => {
             product={editingProduct}
             isEditing={!!editingProduct}
             onSuccess={loadAllItems} // Refresh list on success
+            productIngredients={productIngredients}
+            isLoadingProductIngredients={isLoadingProductIngredients}
           />
         </Stack>
       </Container>

@@ -72,6 +72,13 @@ export const ingredientApi = {
     },
 
     /**
+     * Get all ingredients for a product
+     */
+    async getProductIngredients(productId: string): Promise<Ingredient[]> {
+        return apiClient.get<Ingredient[]>(`${INGREDIENTS_API_BASE}/by-product-id/${productId}`);
+    },
+
+    /**
      * Create new ingredient
      */
     async createIngredient(data: CreateIngredientRequest): Promise<Ingredient> {

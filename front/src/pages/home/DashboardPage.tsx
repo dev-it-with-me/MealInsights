@@ -261,7 +261,7 @@ const DashboardPage = () => {
                 size="sm"
                 component={Link}
                 to="/diet-plan"
-                rightSection={<IconChevronRight size={14} />}
+                rightsection={<IconChevronRight size={14} />}
                 style={{ color: "var(--color-primary-400)" }}
               >
                 See All
@@ -418,7 +418,7 @@ const DashboardPage = () => {
                 size="sm"
                 component={Link}
                 to="/dashboard"
-                rightSection={<IconChevronRight size={14} />}
+                rightsection={<IconChevronRight size={14} />}
                 style={{ color: "var(--color-primary-400)" }}
               >
                 See All
